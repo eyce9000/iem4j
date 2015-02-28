@@ -4,11 +4,11 @@
 This library is a wrapper of the IBM Endpoint Manager REST API and Webreports API. This library does not cover the functionality of the REST API 100%, but is mostly focused on content (fixlet) manipulation.
 
 ##Build Instruction##
-
+```bash
   git clone https://github.com/eyce9000/iem-client.git
   cd iem-client
   mvn package
-
+```
 
 ##Using the Library##
 
@@ -55,12 +55,23 @@ Relevance queries can be run using both the REST API and Webreports API. Both cl
   List<Map<String,Object>> webreportsResults = relevanceClient.executeQuery(query);
 ``` 
 
-You can also read relevance results into Pojos using JAXB or Jackson:
+You can also read relevance results into Pojos using JAXB or Jackson. For example the following Pojo with Jackson annotations:
 ```
 public class MyComputer{
   @JsonProperty("computerId")
   long id;
   @JsonProperty("computerName")
   String name;
+  @JsonProperty("osName")
+  String os;
 }
+```
+Can be read as follows:
+```
+  SessionRelevanceQuery query = SessionRelevanceBuilder
+      .fromRelevance("(name of it, id of it, operating system of it) of bes computers")
+      .addColumns("computerName","computerId","osName")
+      .build();
+
+  List<MyComputer> computers = relevanceClient.executeQuery(query,MyComputer.class);
 ```
