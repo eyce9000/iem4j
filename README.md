@@ -56,7 +56,7 @@ Relevance queries can be run using both the REST API and Webreports API. Both cl
 ``` 
 
 You can also read relevance results into Pojos using JAXB or Jackson. For example the following Pojo with Jackson annotations:
-```
+```java
 public class MyComputer{
   @JsonProperty("computerId")
   long id;
@@ -67,7 +67,7 @@ public class MyComputer{
 }
 ```
 Can be read as follows:
-```
+```java
   SessionRelevanceQuery query = SessionRelevanceBuilder
       .fromRelevance("(name of it, id of it, operating system of it) of bes computers")
       .addColumns("computerName","computerId","osName")
