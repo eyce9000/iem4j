@@ -1,20 +1,17 @@
-#IEM4J#
-#Java Library for IBM Endpoint Manager APIs#
-______
+#IEM4J - Java Library for IBM Endpoint Manager APIs#
 
 ##About the Library##
 This library is a wrapper of the IBM Endpoint Manager REST API and Webreports API. This library does not cover the functionality of the REST API 100%, but is mostly focused on content (fixlet) manipulation.
-______
 
 ##Build Instruction##
-______
+
   git clone https://github.com/eyce9000/iem-client.git
   cd iem-client
   mvn package
 
 
 ##Using the Library##
-____
+
 ###Modifying Content###
 
 ```java
@@ -55,5 +52,15 @@ Relevance queries can be run using both the REST API and Webreports API. Both cl
      "webreportsUsername",
      "webreportsPassword");
      
-  List<Map<String,Object>> webreportsResults = client.executeQuery(query);
+  List<Map<String,Object>> webreportsResults = relevanceClient.executeQuery(query);
 ``` 
+
+You can also read relevance results into Pojos using JAXB or Jackson:
+```
+public class MyComputer{
+  @JsonProperty("computerId")
+  long id;
+  @JsonProperty("computerName")
+  String name;
+}
+```

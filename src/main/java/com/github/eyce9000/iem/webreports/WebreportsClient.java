@@ -15,10 +15,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.joda.time.DateTime;
@@ -43,9 +40,6 @@ public class WebreportsClient implements RelevanceClient{
 	private String password;
 	private String username;
 	private String token;
-	private Unmarshaller unmarshaller;
-	private Marshaller marshaller;
-	private Client client;
 	private WebTarget apiRoot;
 	private URI	uriBase;
 
@@ -58,21 +52,15 @@ public class WebreportsClient implements RelevanceClient{
 	}
 	
 	public WebreportsClient(Client client, String host, String username, String password) throws IllegalArgumentException, UriBuilderException, JAXBException {
-		this(client,UriBuilder.fromPath("/").host(host).scheme("http").port(80).build(),username,password);	
+		this(client,UriBuilder.fromPath("/soap").host(host).scheme("http").port(80).build(),username,password);	
 	}
 	
 	public WebreportsClient(Client client, URI uri, String username, String password) throws JAXBException{
-		this.client = client;
 		this.uriBase = uri;
 		this.username = username;
 		this.password = password;
-		
-		JAXBContext context = JAXBContext.newInstance(Envelope.class);
-		unmarshaller = context.createUnmarshaller();
-		marshaller = context.createMarshaller();
-
 	    
-        apiRoot = client.target(UriBuilder.fromUri(uriBase).fromPath("/soap"));
+        apiRoot = client.target(UriBuilder.fromUri(uriBase));
 	}
 	
 	
