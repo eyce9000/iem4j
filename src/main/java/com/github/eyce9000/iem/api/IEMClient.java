@@ -62,7 +62,7 @@ import com.github.eyce9000.iem.api.relevance.results.ResultTuple;
 import com.google.common.base.Optional;
 
 
-public class TemClient implements RelevanceClient{
+public class IEMClient implements RelevanceClient{
 	private URI baseURI;
 	private Client client;
 	private HttpBasicAuthFilter authFilter;
@@ -71,7 +71,7 @@ public class TemClient implements RelevanceClient{
 	private String username;
 	private Set<ActionLogger> actionLoggers = new HashSet<ActionLogger>();
 	
-	protected TemClient(){}
+	protected IEMClient(){}
 	
 	/**
 	 * 
@@ -80,21 +80,21 @@ public class TemClient implements RelevanceClient{
 	 * @param password The TEM Console password to connect with.
 	 * @throws Exception
 	 */
-	public TemClient(String hostname, String username, String password) throws Exception{
+	public IEMClient(String hostname, String username, String password) throws Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build()
 			,hostname
 			,username
 			,password);
 	}
 
-	public TemClient(Client client, String hostname, String username, String password) throws JAXBException{
+	public IEMClient(Client client, String hostname, String username, String password) throws JAXBException{
 		this(client
 				,UriBuilder.fromPath("/").scheme("https").host(hostname).port(52311).build()
 				,username
 				,password);
 	}
 	
-	public TemClient(Client client, URI uri, String username, String password) throws JAXBException{
+	public IEMClient(Client client, URI uri, String username, String password) throws JAXBException{
 		this.client = client;
 		this.baseURI = uri;
 		switchUser(username, password);
@@ -127,20 +127,20 @@ public class TemClient implements RelevanceClient{
 	// C O M P U T E R   M E T H O D S
 	//*******************************************************************
 	
-	public BESAPI.ComputerSettings getComputerSettings(String computerid) throws Exception{
+	public BESAPI.ComputerSettings getComputerSettings(long computerid) throws Exception{
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/settings")
 				.resolveTemplate("computerid",computerid);
 		return target.request().get(BESAPI.ComputerSettings.class);
 	}
-	public BESAPI.ComputerSettings getComputerSetting(String computerid, String settingid){
+	public BESAPI.ComputerSettings getComputerSetting(long computerid, String settingid){
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/setting/{settingid}")
 				.resolveTemplate("computerid",computerid)
 				.resolveTemplate("settingid",settingid);
 		return target.request().get(BESAPI.ComputerSettings.class);
 	}
-	public BESAPI.Action setComputerSetting(String computerid, String settingid, String value){
+	public BESAPI.Action setComputerSetting(long computerid, String settingid, String value){
 		LinkedList<ComputerSetting> settings = new LinkedList<ComputerSetting>();
 		ComputerSetting setting = new ComputerSetting();
 		setting.setName(settingid);
@@ -148,7 +148,7 @@ public class TemClient implements RelevanceClient{
 		settings.add(setting);
 		return setComputerSettings(computerid,settings);
 	}
-	public BESAPI.Action setComputerSettings(String computerid, Map<String,String> settingsMap){
+	public BESAPI.Action setComputerSettings(long computerid, Map<String,String> settingsMap){
 		LinkedList<ComputerSetting> settings = new LinkedList<ComputerSetting>();
 		for(Entry<String,String> entry:settingsMap.entrySet()){
 			ComputerSetting setting = new ComputerSetting();
@@ -158,7 +158,7 @@ public class TemClient implements RelevanceClient{
 		}
 		return setComputerSettings(computerid,settings);
 	}
-	private BESAPI.Action setComputerSettings(String computerid, List<ComputerSetting> settings){
+	private BESAPI.Action setComputerSettings(long computerid, List<ComputerSetting> settings){
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/settings")
 				.resolveTemplate("computerid",computerid);
@@ -168,7 +168,7 @@ public class TemClient implements RelevanceClient{
 		return (BESAPI.Action)target.request().post(entity,BESAPI.class).getFixletOrReplicationServerOrReplicationLink().get(0).getValue();
 	}
 
-	public BESAPI.Action setComputerSettingLocalTime(String computerid, String settingid, String value){
+	public BESAPI.Action setComputerSettingLocalTime(long computerid, String settingid, String value){
 		BESAPI.ComputerSettings settings = new BESAPI.ComputerSettings();
 		ComputerSetting setting = new ComputerSetting();
 		setting.setName(settingid);
@@ -176,7 +176,7 @@ public class TemClient implements RelevanceClient{
 		settings.getSetting().add(setting);
 		return setComputerSettingsLocalTime(computerid,settings);
 	}
-	public BESAPI.Action setComputerSettingsLocalTime(String computerid, Map<String,String> settingsMap){
+	public BESAPI.Action setComputerSettingsLocalTime(long computerid, Map<String,String> settingsMap){
 		BESAPI.ComputerSettings settings = new BESAPI.ComputerSettings();
 		for(Entry<String,String> entry:settingsMap.entrySet()){
 			ComputerSetting setting = new ComputerSetting();
@@ -187,33 +187,33 @@ public class TemClient implements RelevanceClient{
 		return setComputerSettingsLocalTime(computerid,settings);
 	}
 	
-	public BESAPI.Action setComputerSettingsLocalTime(String computerid, List<ComputerSetting> settings){
+	public BESAPI.Action setComputerSettingsLocalTime(long computerid, List<ComputerSetting> settings){
 		BESAPI.ComputerSettings csettings = new BESAPI.ComputerSettings();
 		csettings.getSetting().addAll(settings);
 		return setComputerSettingsLocalTime(computerid,csettings);
 	}
 	
-	public BESAPI.Action setComputerSettingsLocalTime(String computerid, BESAPI.ComputerSettings settings){
+	public BESAPI.Action setComputerSettingsLocalTime(long computerid, BESAPI.ComputerSettings settings){
 		SingleAction action = ActionBuilder.singleAction()
 				.actionScript(ActionScriptBuilder.start().putComputerSettingNow(settings).build())
 				.relevance("true")
 				.title("Change Computer Settings - Local Now")
 				.build();
-		action.setTarget(ActionTargetBuilder.targetComputers(Long.parseLong(computerid)));
+		action.setTarget(ActionTargetBuilder.targetComputers(computerid));
 		return createAction(action);
 	}
 	
-	public List<BESAPI.Action> deleteComputerSettings(String computerid, String...settingNames){
+	public List<BESAPI.Action> deleteComputerSettings(long computerid, String...settingNames){
 		return deleteComputerSettings(computerid, Arrays.asList(settingNames));
 	}
-	public List<BESAPI.Action> deleteComputerSettings(String computerid, List<String> settingNames){
+	public List<BESAPI.Action> deleteComputerSettings(long computerid, List<String> settingNames){
 		List<BESAPI.Action> actions = new ArrayList<BESAPI.Action>();
 		for(String settingName:settingNames){
 			actions.add(deleteComputerSetting(computerid, settingName));
 		}
 		return actions;
 	}
-	public BESAPI.Action deleteComputerSetting(String computerid, String settingName){
+	public BESAPI.Action deleteComputerSetting(long computerid, String settingName){
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/setting/{settingName}")
 				.resolveTemplate("computerid",computerid)
@@ -221,13 +221,13 @@ public class TemClient implements RelevanceClient{
 		return (BESAPI.Action)target.request().get(BESAPI.class).getFixletOrReplicationServerOrReplicationLink().get(0).getValue();
 	}
 	
-	public BESAPI.Action deleteComputerSettingsLocalTime(String computerid, String...settingNames){
+	public BESAPI.Action deleteComputerSettingsLocalTime(long computerid, String...settingNames){
 		SingleAction action = ActionBuilder.singleAction()
 				.actionScript(ActionScriptBuilder.start().deleteComputerSettingsNow(settingNames).build())
 				.relevance("true")
 				.title("Delete Computer Settings - Local Now")
 				.build();
-		action.setTarget(ActionTargetBuilder.targetComputers(Long.parseLong(computerid)));
+		action.setTarget(ActionTargetBuilder.targetComputers(computerid));
 		return createAction(action);
 	}
 

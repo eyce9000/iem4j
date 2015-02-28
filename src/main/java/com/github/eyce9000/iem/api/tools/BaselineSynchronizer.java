@@ -14,19 +14,20 @@ import com.bigfix.schemas.bes.Baseline.BaselineComponentCollection.BaselineCompo
 import com.bigfix.schemas.bes.Baseline.BaselineComponentCollection.BaselineComponentGroup.BaselineComponent;
 import com.bigfix.schemas.bes.FixletAction;
 import com.bigfix.schemas.bes.FixletWithActions;
-import com.github.eyce9000.iem.api.TemClient;
+import com.github.eyce9000.iem.api.IEMClient;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
 import com.google.common.base.Optional;
 
 public class BaselineSynchronizer {
-	TemClient client;
-	private SessionRelevanceQuery fixletQuery,groupQuery;
 	Logger log = LoggerFactory.getLogger(getClass());
-	private RelevanceTranslator translator;
 	
-	public BaselineSynchronizer(TemClient client){
+	private SessionRelevanceQuery fixletQuery,groupQuery;
+	private RelevanceTranslator translator;
+	private IEMClient client;
+	
+	public BaselineSynchronizer(IEMClient client){
 		this.client = client;
 		fixletQuery = SessionRelevanceBuilder
 				.fromRelevance("(name of site of it,tag of site of it, id of it) of bes fixlets whose (id of it = ${fixletId})")

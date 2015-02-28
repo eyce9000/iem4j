@@ -13,7 +13,7 @@ import com.bigfix.schemas.bes.SearchComponent;
 import com.bigfix.schemas.bes.SearchComponentGroupReference;
 import com.bigfix.schemas.bes.SearchComponentPropertyReference;
 import com.bigfix.schemas.bes.SearchComponentRelevance;
-import com.github.eyce9000.iem.api.TemClient;
+import com.github.eyce9000.iem.api.IEMClient;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
@@ -21,9 +21,9 @@ import com.google.common.base.Optional;
 
 public class RelevanceTranslator {
 	private SessionRelevanceQuery groupQuery;
-	private TemClient client;
+	private IEMClient client;
 
-	public RelevanceTranslator(TemClient client){
+	public RelevanceTranslator(IEMClient client){
 		this.client = client;
 		groupQuery = SessionRelevanceBuilder
 				.fromRelevance("(id of it,name of it) of bes computer groups whose (name of it = \"${groupName}\")")
