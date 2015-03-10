@@ -25,7 +25,7 @@ In order to use this library as a maven dependency you will need to add the foll
 </repositories>
 ```
 Then add this dependency:
-```
+```xml
 <dependency>
   <groupId>com.github.eyce9000</groupId>
   <artifactId>iem4j-client</artifactId>
@@ -36,7 +36,7 @@ Then add this dependency:
 ##Using the Library##
 
 ###Reading, Creating and Uploading Fixlets###
-You can upload and download ActionFixlets, Tasks, Analyses and Baselines. All of the objects conform to the BES.xml schema, so they can be serialized and deserialized using JAXB from your existing .bes files. Here is an example of 
+You can upload and download ActionFixlets, Tasks, Analyses and Baselines. All of the objects conform to the BES.xml schema, so they can be serialized and deserialized using JAXB from your existing .bes files. 
 ```java
 IEMClient client = new IEMClient("hostname","username","password");
 
@@ -82,7 +82,8 @@ BESAPI.Action actionReference = client.createAction(action);
 BESAPI.ActionResults actionResults = client.getActionStatus(actionReference);
 
 for(ComputerResultType computerResult:actionResults.getComputer()){
-  System.out.println("Got status "+computerResult.getStatus()+" for computer "+computerResult.getID());
+  System.out.println(
+    "Got status "+computerResult.getStatus()+" for computer "+computerResult.getID());
 }
 
 ```

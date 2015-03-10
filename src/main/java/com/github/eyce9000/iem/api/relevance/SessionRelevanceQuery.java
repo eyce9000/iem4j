@@ -130,7 +130,7 @@ public class SessionRelevanceQuery {
 	 * Sets the parameters
 	 * @param parameters a list of QueryParameters
 	 */
-	public void setParameters(List<QueryParameter> parameters){
+	void setParameters(List<QueryParameter> parameters){
 		this.parameters = parameters;
 		this.parameterMap = null;
 	}
@@ -139,19 +139,12 @@ public class SessionRelevanceQuery {
 	 * @param parameter the QueryParameter to set
 	 * @param index the index where the QueryParameter will be set
 	 */
-	public void setParameter(QueryParameter parameter,int index){
+	void setParameter(QueryParameter parameter,int index){
 		if(index >=0 && index<parameters.size()){
 			parameters.set(index, parameter);
 			if(parameterMap!=null)
 				parameterMap.put(parameter.getName(), parameter);
 		}
-	}
-	/**
-	 * Returns the number of parameters.
-	 * @return the number of parameters
-	 */
-	public int getParameterCount(){
-		return parameters.size();
 	}
 
 	/**
@@ -195,8 +188,13 @@ public class SessionRelevanceQuery {
 		else
 			return -1;
 	}
-	
-	public boolean putParameter(String paramName, Object value){
+	/**
+	 * Put a value in the parameter
+	 * @param paramName the name of the parameter
+	 * @param value the value to set for <code>paramName</code>
+	 * @return returns false if no parameter <code>paramName</code> was found, otherwise returns true
+	 */
+	public boolean setParameterValue(String paramName, Object value){
 		int index = getParameterIndex(paramName);
 		if(index == -1)
 			return false;
@@ -207,7 +205,7 @@ public class SessionRelevanceQuery {
 	 * Returns a map of the parameters, where the key is the name of the parameter
 	 * @return the map of the parameters, where the key is the name of the parameter
 	 */
-	public Map<String,QueryParameter> getParameterMap(){
+	Map<String,QueryParameter> getParameterMap(){
 		if(parameterMap == null){
 			parameterMap = new LinkedHashMap<String,QueryParameter>();
 			for(QueryParameter param: parameters){
@@ -233,7 +231,7 @@ public class SessionRelevanceQuery {
 	 * @param column the column to place
 	 * @param index the index where the column will be put
 	 */
-	public void setColumn(QueryResultColumn column, int index){
+	void setColumn(QueryResultColumn column, int index){
 		if(index>=0 && index < columns.size()){
 			columns.set(index, column);
 			column.setIndex(index);
@@ -241,6 +239,7 @@ public class SessionRelevanceQuery {
 				columnMap.put(column.getName(), column);
 		}
 	}
+	
 	private void indexColumns(){
 		if(!columnsIndexed){
 			for(int i=0; i<columns.size(); i++){
@@ -324,71 +323,20 @@ public class SessionRelevanceQuery {
 		return resultQuery;
 	}
 	/**
-	 * Serialize this SessionRelevanceQuery as xml to a file
-	 * @param file 		an xml file to serialize to
-	 * @throws JAXBException
-	 * @throws IOException 
+	 * Creates a new SessionRelevanceQuery by parsing a formatted query. A formatted query may have multiple lines and may contain comments. 
+	 * Additionally a formatted session relevance query can define columns and parameters.<br/>
+	 * For example:<br/>
+	 * <code>
+	 * ( <br/> 
+	 * name of it, //@Column computerName <br/>
+	 * operating system of it, //@Column osName <br/>
+	 * id of it //@Column computerId <br/>
+	 * ) of bes computers whose(name of it contains "${searchName}")
+	 * </code>
+	 * will return a SessionRelevanceQuery with 3 column names in the order they appear in the query, as well as one parameter named <code>searchName</code>
+	 * @param query The formatted (or unformatted) session relevance query
+	 * @return a constructed SessionRelevanceQuery with columns and parameters extracted
 	 */
-	public void serialize(File file) throws JAXBException, IOException{
-		serialize(new FileWriter(file));
-	}
-	/**
-	 * Serialize this SessionRelevanceQuery as xml to a Writer
-	 * @param writer 	a writer to serialize to
-	 * @throws JAXBException 
-	 * @throws Exception
-	 */
-	public void serialize(Writer writer) throws JAXBException {
-		JAXBContext jc = JAXBContext.newInstance(SessionRelevanceQuery.class);
-		Marshaller m = jc.createMarshaller();
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.marshal(this, writer);
-	}
-	
-	public void serialize(OutputStream stream) throws JAXBException{
-		serialize(new OutputStreamWriter(stream));
-	}
-	/**
-	 * Get this SessionRelevanceQuery as xml serialized to a String
-	 * @return	the xml string value of this SessionRelevanceQuery
-	 * @throws Exception
-	 */
-	public String serializeToString(){
-		try{
-			StringWriter writer = new StringWriter();
-			this.serialize(writer);
-			return writer.toString();
-		}
-		catch(Exception ex){
-			return "";
-		}
-	}
-	
-	public static SessionRelevanceQuery deserialize(InputStream in) throws Exception{
-		JAXBContext jc = JAXBContext.newInstance(SessionRelevanceQuery.class);
-		return (SessionRelevanceQuery)jc.createUnmarshaller().unmarshal(in);
-	}
-	
-	/**
-	 * Create a new SessionRelevanceQuery from an xml file
-	 * @param file	a SessionRelevanceQuery xml file (typically with the extension <em>.srq</em>)
-	 * @return	a new SessionRelevanceQuery 
-	 * @throws Exception
-	 */
-	public static SessionRelevanceQuery deserialize(File file) throws Exception{
-		return deserialize(new FileInputStream(file));
-	}
-
-	/**
-	 * Create a new SessionRelevanceQuery from an string
-	 * @param file	a SessionRelevanceQuery xml string
-	 * @return	a new SessionRelevanceQuery 
-	 * @throws Exception
-	 */
-	public static SessionRelevanceQuery deserialize(String data) throws Exception{
-		return deserialize(new ByteArrayInputStream(data.getBytes("UTF-8")));
-	}
-	
 	public static SessionRelevanceQuery parseQuery(String query){
 		SessionRelevanceQuery srq = new SessionRelevanceQuery();
 		srq.setParameters(QueryParameter.extractParameters(query));

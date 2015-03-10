@@ -68,6 +68,7 @@ public class RelevanceTranslator {
 		result.setValue(joined);
 		return result;
 	}
+	
 	public RelevanceString buildRelevance(SearchComponentGroupReference component) throws Exception{
 		String format = "exists true whose (if true then (member of group %d of site \"actionsite\") else false)";
 		switch(component.getComparison()){

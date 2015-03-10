@@ -70,14 +70,15 @@ public class IEMClient implements RelevanceClient{
 	private Unmarshaller unmarshaller;
 	private String username;
 	private Set<ActionLogger> actionLoggers = new HashSet<ActionLogger>();
+	private int version = 92;
 	
 	protected IEMClient(){}
 	
 	/**
 	 * 
-	 * @param url The complete url pointing to the TEM REST server. For example <code>https://bigfix.ibm.com:52311/</code>
-	 * @param username The TEM Console username to connect with.
-	 * @param password The TEM Console password to connect with.
+	 * @param url The hostname of the IEM server. For example <code>mybigfixsrv.ibm.com</code>. The client will by default connect on port 52311.
+	 * @param username The IEM Console username to connect with.
+	 * @param password The IEM Console password to connect with.
 	 * @throws Exception
 	 */
 	public IEMClient(String hostname, String username, String password) throws Exception{
@@ -133,6 +134,7 @@ public class IEMClient implements RelevanceClient{
 				.resolveTemplate("computerid",computerid);
 		return target.request().get(BESAPI.ComputerSettings.class);
 	}
+	
 	public BESAPI.ComputerSettings getComputerSetting(long computerid, String settingid){
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/setting/{settingid}")
@@ -140,6 +142,7 @@ public class IEMClient implements RelevanceClient{
 				.resolveTemplate("settingid",settingid);
 		return target.request().get(BESAPI.ComputerSettings.class);
 	}
+	
 	public BESAPI.Action setComputerSetting(long computerid, String settingid, String value){
 		LinkedList<ComputerSetting> settings = new LinkedList<ComputerSetting>();
 		ComputerSetting setting = new ComputerSetting();
@@ -148,6 +151,7 @@ public class IEMClient implements RelevanceClient{
 		settings.add(setting);
 		return setComputerSettings(computerid,settings);
 	}
+	
 	public BESAPI.Action setComputerSettings(long computerid, Map<String,String> settingsMap){
 		LinkedList<ComputerSetting> settings = new LinkedList<ComputerSetting>();
 		for(Entry<String,String> entry:settingsMap.entrySet()){
@@ -158,6 +162,7 @@ public class IEMClient implements RelevanceClient{
 		}
 		return setComputerSettings(computerid,settings);
 	}
+	
 	private BESAPI.Action setComputerSettings(long computerid, List<ComputerSetting> settings){
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/settings")
@@ -206,6 +211,7 @@ public class IEMClient implements RelevanceClient{
 	public List<BESAPI.Action> deleteComputerSettings(long computerid, String...settingNames){
 		return deleteComputerSettings(computerid, Arrays.asList(settingNames));
 	}
+	
 	public List<BESAPI.Action> deleteComputerSettings(long computerid, List<String> settingNames){
 		List<BESAPI.Action> actions = new ArrayList<BESAPI.Action>();
 		for(String settingName:settingNames){
@@ -213,6 +219,7 @@ public class IEMClient implements RelevanceClient{
 		}
 		return actions;
 	}
+	
 	public BESAPI.Action deleteComputerSetting(long computerid, String settingName){
 		WebTarget target = apiRoot
 				.path("computer/{computerid}/setting/{settingName}")
@@ -246,6 +253,7 @@ public class IEMClient implements RelevanceClient{
 	public BESAPI.ActionResults getActionStatus(BESAPI.Action action){
 		return getActionStatus(action.getID());
 	}
+	
 	public BESAPI.ActionResults getActionStatus(BigInteger actionId){
 		WebTarget target = apiRoot
 				.path("action/{actionid}/status")
@@ -345,13 +353,13 @@ public class IEMClient implements RelevanceClient{
 	
 	public void updateFixlet(String siteType, String site, long id, FixletWithActions content) throws MalformedURLException{
 		WebTarget target = buildSiteTarget(apiRoot.path("/fixlet/"),siteType,site).path("/{id}").resolveTemplate("id", id+"");
-		Response resp = putBESContent(target,content,FixletWithActions.class);
+		putBESContent(target,content,FixletWithActions.class);
 	}
 	
 	public void updateFixlet(BESAPI.Fixlet resource, FixletWithActions content) throws MalformedURLException{
 		URL url = new URL(resource.getResource());
 		WebTarget target =root.path(url.getPath());
-		Response resp = putBESContent(target,content,FixletWithActions.class);
+		putBESContent(target,content,FixletWithActions.class);
 	}
 	
 	public List<BESAPI.Fixlet> getFixlets(String siteType,String site){
@@ -382,13 +390,13 @@ public class IEMClient implements RelevanceClient{
 	
 	public void updateTask(String siteType, String site, long id, Task content) throws MalformedURLException{
 		WebTarget target = buildSiteTarget(apiRoot.path("/task/"),siteType,site).path("/{id}").resolveTemplate("id", id+"");
-		Response resp = putBESContent(target,content,Task.class);
+		putBESContent(target,content,Task.class);
 	}
 	
 	public void updateTask(BESAPI.Task resource, Task content) throws MalformedURLException{
 		URL url = new URL(resource.getResource());
 		WebTarget target =root.path(url.getPath());
-		Response resp = putBESContent(target,content,Task.class);
+		putBESContent(target,content,Task.class);
 	}
 	
 	public List<BESAPI.Task> getTasks(String siteType,String site){
@@ -450,6 +458,7 @@ public class IEMClient implements RelevanceClient{
 		WebTarget target = buildSiteTarget(apiRoot.path("/fixlet/"),siteType,site).path("/{id}").resolveTemplate("id", id+"");
 		return getSingleBESContent(target.request().get(),Baseline.class);
 	}
+	
 	public Optional<BESAPI.Baseline> createBaseline(String siteType, String site, Baseline content) throws MalformedURLException{
 		WebTarget target = buildSiteTarget(apiRoot.path("/import/"),siteType,site);
 		Response resp = postBESContent(target,content);
@@ -469,14 +478,17 @@ public class IEMClient implements RelevanceClient{
 	}
 	
 	public void updateBaseline(String siteType, String site, long id, Baseline content) throws MalformedURLException{
-		WebTarget target = buildSiteTarget(apiRoot.path("/fixlet/"),siteType,site).path("/{id}").resolveTemplate("id", id+"");
-		Response resp = putBESContent(target,content,Baseline.class);
+		WebTarget target;
+		target = apiRoot.path("/fixlet/");
+		target = buildSiteTarget(target,siteType,site).path("/{id}").resolveTemplate("id", id+"");
+		putBESContent(target,content,Baseline.class);
+		
 	}
 	
 	public void updateBaseline(BESAPI.Baseline resource, Baseline content) throws MalformedURLException{
 		URL url = new URL(resource.getResource());
 		WebTarget target =root.path(url.getPath());
-		Response resp = putBESContent(target,content,Baseline.class);
+		putBESContent(target,content,Baseline.class);
 	}
 	
 
@@ -507,11 +519,11 @@ public class IEMClient implements RelevanceClient{
 	// R E S P O N S E  /  G E T  M E T H O D S
 	//*******************************************************************
 
-	public String get(String path){
+	public String getRaw(String path){
 		return root.path(path).request().get(String.class);
 	}
 	
-	public <T> Optional<T> getSingleBESContent(Response resp, Class<T> clazz){
+	protected <T> Optional<T> getSingleBESContent(Response resp, Class<T> clazz){
 		if(resp.getStatus()==404)
 			return Optional.absent();
 		List<T> list = getBESContent(resp,clazz);
@@ -521,7 +533,7 @@ public class IEMClient implements RelevanceClient{
 			return Optional.of(list.get(0));
 	}
 	
-	public <T> List<T> getBESContent(Response resp, Class<T> clazz){
+	protected <T> List<T> getBESContent(Response resp, Class<T> clazz){
 		BES bes = handleResponse(resp,BES.class);
 		bes.getFixletOrTaskOrAnalysis();
 		List<T> values = new ArrayList<T>();
@@ -531,7 +543,7 @@ public class IEMClient implements RelevanceClient{
 		return values;
 	}
 
-	public <T> Optional<T> getSingleBESAPIContent(Response resp, Class<T> clazz){
+	protected <T> Optional<T> getSingleBESAPIContent(Response resp, Class<T> clazz){
 		if(resp.getStatus()==404)
 			return Optional.absent();
 		List<T> list = getBESAPIContent(resp,clazz);
@@ -541,7 +553,7 @@ public class IEMClient implements RelevanceClient{
 			return Optional.of(list.get(0));
 	}
 	
-	public <T> List<T> getBESAPIContent(Response resp, Class<T> clazz){
+	protected <T> List<T> getBESAPIContent(Response resp, Class<T> clazz){
 		BESAPI besapi = handleResponse(resp,BESAPI.class);
 		List<T> values = new ArrayList<T>();
 		for(JAXBElement<?> wrapper : besapi.getFixletOrReplicationServerOrReplicationLink()){
@@ -550,18 +562,17 @@ public class IEMClient implements RelevanceClient{
 		return values;
 	}
 	
-	
-	
-	public <T> Response putBESContent(WebTarget target,T value,Class<T> clazz){
+	protected <T> void putBESContent(WebTarget target,T value,Class<T> clazz){
 		BES bes = new BES();
 		bes.getFixletOrTaskOrAnalysis()
 			.add(value);
 
 		Entity<BES> entity = Entity.entity(bes, MediaType.APPLICATION_XML);
-		return target.request().put(entity);
+		Response response = target.request().put(entity);
+		handleResponse(response,String.class);
 	}
 
-	public <T> Response postBESContent(WebTarget target,T value){
+	protected <T> Response postBESContent(WebTarget target,T value){
 		BES bes = new BES();
 		bes.getFixletOrTaskOrAnalysis()
 			.add(value);
@@ -570,8 +581,8 @@ public class IEMClient implements RelevanceClient{
 		return target.request().post(entity);
 	}
 	
-	public <T> T handleResponse(Response resp,Class<T> clazz){
-		if(resp.getStatus()==200){
+	protected <T> T handleResponse(Response resp,Class<T> clazz){
+		if(resp.getStatus()>=200 && resp.getStatus()<300){
 			return resp.readEntity(clazz);
 		}
 		else{
@@ -581,7 +592,7 @@ public class IEMClient implements RelevanceClient{
 				String line = null;
 				while((line=reader.readLine())!=null)
 					error += line +"\n";
-				throw new BadRequestException(error);
+				throw new BadRequestException(resp.getStatus()+": "+error);
 			}
 			catch(Exception ex){
 				throw new BadRequestException(ex);
@@ -589,7 +600,7 @@ public class IEMClient implements RelevanceClient{
 		}
 	}
 	
-	private WebTarget buildSiteTarget(WebTarget base, String siteType, String site){
+	protected WebTarget buildSiteTarget(WebTarget base, String siteType, String site){
 		WebTarget target;
 		target = base.path("{siteType}")
 				.resolveTemplate("siteType", siteType);
@@ -654,7 +665,7 @@ public class IEMClient implements RelevanceClient{
 	private void processResponse(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException, RelevanceException{
 		if(result.getError()!=null){
 			System.out.println(result.getQuery());
-			throw new RelevanceException(result.getError());
+			throw new RelevanceException(result);
 		}
 		
 		List<QueryResultColumn> columns = srq.getColumns();
