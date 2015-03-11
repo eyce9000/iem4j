@@ -32,6 +32,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.joda.time.DateTime;
 
 import com.bigfix.schemas.bes.Action;
 import com.bigfix.schemas.bes.Analysis;
@@ -43,7 +44,11 @@ import com.bigfix.schemas.bes.Site;
 import com.bigfix.schemas.bes.SourcedFixletAction;
 import com.bigfix.schemas.bes.Task;
 import com.bigfix.schemas.besapi.BESAPI;
+import com.bigfix.schemas.besapi.BESAPI.Query;
 import com.bigfix.schemas.besapi.ComputerSetting;
+import com.bigfix.schemas.besapi.RelevanceAnswer;
+import com.bigfix.schemas.besapi.RelevanceResult;
+import com.bigfix.schemas.besapi.RelevanceTuple;
 import com.github.eyce9000.iem.api.actions.ActionBuilder;
 import com.github.eyce9000.iem.api.actions.ActionTargetBuilder;
 import com.github.eyce9000.iem.api.actions.logger.ActionLogger;
@@ -59,6 +64,7 @@ import com.github.eyce9000.iem.api.relevance.handlers.impl.RawResultHandlerDefau
 import com.github.eyce9000.iem.api.relevance.handlers.impl.TypedResultListHandler;
 import com.github.eyce9000.iem.api.relevance.results.QueryResult;
 import com.github.eyce9000.iem.api.relevance.results.ResultTuple;
+import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter.Answer;
 import com.google.common.base.Optional;
 
 
@@ -100,7 +106,7 @@ public class IEMClient implements RelevanceClient{
 		this.baseURI = uri;
 		switchUser(username, password);
         this.username = username;
-        JAXBContext context = JAXBContext.newInstance(BESAPI.ComputerSettings.class,QueryResult.class);
+        JAXBContext context = JAXBContext.newInstance(QueryResult.class);
 		unmarshaller = context.createUnmarshaller();
 		
 	}
@@ -651,34 +657,76 @@ public class IEMClient implements RelevanceClient{
 	
 	private QueryResult runRelevanceQuery(String query){
 		WebTarget target = apiRoot.path("query");
-		Response response;
 		try {
 			String data = "relevance="+URLEncoder.encode(query, "UTF-8");
-			response = target.request(MediaType.APPLICATION_XML).post(Entity.text(data));
-			
+			Response response = target.request(MediaType.APPLICATION_XML).post(Entity.text(data));
 			return (QueryResult)unmarshaller.unmarshal((InputStream)response.getEntity());
+			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
+
 	private void processResponse(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException, RelevanceException{
 		if(result.getError()!=null){
-			System.out.println(result.getQuery());
 			throw new RelevanceException(result);
 		}
 		
-		List<QueryResultColumn> columns = srq.getColumns();
-		if(result.getResults().isEmpty()){
-			handler.onComplete(result.getEvaluationTime().getTime().getMillis());
+		switch(result.getEvaluation().getPlurality()){
+			case Plural:
+				processPluralResult(result,srq,handler);
+				break;
+			case Singular:
+				processSingleResult(result,srq,handler);
+				break;
+			default:
+				break;
+		}
+		handler.onComplete(result.getEvaluation().getTime().getMillis());
+	}
+	
+	private void processSingleResult(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException{
+		List<Object> firstRow = Arrays.asList(result.getSingleResult());
+		List<QueryResultColumn> columns = buildColumns(firstRow,srq);
+		handleRow(firstRow,columns,handler);
+	}
+	
+	private void processPluralResult(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException{
+		if(result.getPluralResults().isEmpty()){
 			return;
 		}
 		
-		List<Object> firstRow = result.getResults().get(0).getAnswers();
-		int diff = firstRow.size() - columns.size();
+		List<Object> firstRow = result.getPluralResults().get(0).getAnswers();
+		List<QueryResultColumn> columns = buildColumns(firstRow,srq);
+		for(ResultTuple row : result.getPluralResults()){
+			
+			List<Object> rowData = row.getAnswers();
+			handleRow(rowData,columns,handler);
+		}
+	}
+	
+	
+	private void handleRow(List<Object> rowData, List<QueryResultColumn> columns,RawResultHandler handler) throws HandlerException{
+		HashMap<String,Object> sampleRowValues = new HashMap<String,Object>();
+    	for(int colNum=0; colNum<columns.size(); colNum++){
+    		QueryResultColumn column = columns.get(colNum);
+			sampleRowValues.put(column.getName(),rowData.get(colNum));
+    	}
+    	try{
+    		handler.onResult(sampleRowValues);
+    	}
+    	catch(Exception ex){
+    		throw new HandlerException(ex);
+    	}
+	}
+	
+	private List<QueryResultColumn> buildColumns(List<Object> hintRow,SessionRelevanceQuery srq){
+		List<QueryResultColumn> columns = srq.getColumns();
+		int diff = hintRow.size() - columns.size();
     	if(diff > 0){
     		List<QueryResultColumn> newColumns = new ArrayList<QueryResultColumn>(columns);
-    		for(int i=0; i<firstRow.size(); i++){
+    		for(int i=0; i<hintRow.size(); i++){
     			if(i>=columns.size()){
     				newColumns.add(new QueryResultColumn("col"+i,DataType.string));
     			}
@@ -686,27 +734,13 @@ public class IEMClient implements RelevanceClient{
     		columns = newColumns;
     	}
     	else if (diff < 0){
-    		while(columns.size() > firstRow.size()){
+    		while(columns.size() > hintRow.size()){
         		columns.remove(columns.size()-1);
     		}
     	}
-    	
-    	srq.setColumns(columns);
-		for(ResultTuple rowData : result.getResults()){
-			HashMap<String,Object> sampleRowValues = new HashMap<String,Object>();
-	    	for(int colNum=0; colNum<columns.size(); colNum++){
-	    		QueryResultColumn column = columns.get(colNum);
-				sampleRowValues.put(column.getName(),rowData.getAnswers().get(colNum));
-	    	}
-	    	try{
-	    		handler.onResult(sampleRowValues);
-	    	}
-	    	catch(Exception ex){
-	    		throw new HandlerException(ex);
-	    	}
-		}
-		handler.onComplete(result.getEvaluationTime().getTime().getMillis());
+    	return columns;
 	}
+	
 	
 
 }

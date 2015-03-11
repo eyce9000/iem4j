@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter;
 
+
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ResultTuple {
 	@XmlElement(name="Answer")

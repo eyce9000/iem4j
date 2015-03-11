@@ -5,10 +5,18 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.eclipse.persistence.oxm.annotations.XmlPath;
+
+import com.bigfix.schemas.besapi.RelevanceAnswer;
+import com.bigfix.schemas.besapi.RelevanceTuple;
+import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter;
+import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter.Answer;
 
 @XmlType(name = "Query")
 @XmlRootElement(name="BESAPI")
@@ -16,12 +24,16 @@ import org.eclipse.persistence.oxm.annotations.XmlPath;
 public class QueryResult {
 	@XmlPath("Query/@Resource")
 	private String query;
-	
+
 	@XmlPath("Query/Result/Tuple")
-	private List<ResultTuple> results = new ArrayList<ResultTuple>();
+    protected List<ResultTuple> results;
+	
+	@XmlPath("Query/Result/Answer")
+	@XmlJavaTypeAdapter(value=ResultAnswerAdapter.class)
+	protected Object singleResultAnswer;
 	
 	@XmlPath("Query/Evaluation")
-	private QueryEvaluation evaluationTime;
+	private QueryEvaluation evaluation;
 
 	@XmlPath("Query/Error/text()")
 	private String error;
@@ -30,33 +42,19 @@ public class QueryResult {
 		return query;
 	}
 
-	public void setQuery(String query) {
-		this.query = query;
-	}
-
-	public List<ResultTuple> getResults() {
+	public List<ResultTuple> getPluralResults() {
 		return results;
 	}
-
-	public void setResults(List<ResultTuple> results) {
-		this.results = results;
+	public Object getSingleResult(){
+		return singleResultAnswer;
 	}
-
-	public QueryEvaluation getEvaluationTime() {
-		return evaluationTime;
-	}
-
-	public void setEvaluationTime(QueryEvaluation evaluationTime) {
-		this.evaluationTime = evaluationTime;
+	public QueryEvaluation getEvaluation() {
+		return evaluation;
 	}
 
 	public String getError() {
 		return error;
 	}
 
-	public void setError(String error) {
-		this.error = error;
-	}
-	
 	
 }

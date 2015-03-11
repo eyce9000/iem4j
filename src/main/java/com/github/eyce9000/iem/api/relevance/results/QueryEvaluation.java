@@ -7,6 +7,7 @@ import org.joda.time.Period;
 
 import com.github.eyce9000.iem.api.serialization.XmlPeriodAdapter;
 
+
 public class QueryEvaluation {
 	public static enum Plurality{Plural,Singular,None}
 	

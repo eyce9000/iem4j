@@ -13,23 +13,21 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for RelevanceResult complex type.
+ * <p>Java class for RelevanceTuple complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="RelevanceResult">
+ * &lt;complexType name="RelevanceTuple">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;choice maxOccurs="unbounded" minOccurs="0">
- *         &lt;element name="Answer" type="{}RelevanceAnswer"/>
- *         &lt;element name="Tuple" type="{}RelevanceTuple"/>
- *       &lt;/choice>
+ *       &lt;sequence>
+ *         &lt;element name="Answer" type="{}RelevanceAnswer" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -38,45 +36,41 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "RelevanceResult", propOrder = {
-    "answerOrTuple"
+@XmlType(name = "RelevanceTuple", propOrder = {
+    "answer"
 })
-public class RelevanceResult {
+public class RelevanceTuple {
 
-    @XmlElements({
-        @XmlElement(name = "Answer", type = RelevanceAnswer.class),
-        @XmlElement(name = "Tuple", type = RelevanceTuple.class)
-    })
-    protected List<Object> answerOrTuple;
+    @XmlElement(name = "Answer")
+    protected List<RelevanceAnswer> answer;
 
     /**
-     * Gets the value of the answerOrTuple property.
+     * Gets the value of the answer property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the answerOrTuple property.
+     * This is why there is not a <CODE>set</CODE> method for the answer property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getAnswerOrTuple().add(newItem);
+     *    getAnswer().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
      * {@link RelevanceAnswer }
-     * {@link RelevanceTuple }
      * 
      * 
      */
-    public List<Object> getAnswerOrTuple() {
-        if (answerOrTuple == null) {
-            answerOrTuple = new ArrayList<Object>();
+    public List<RelevanceAnswer> getAnswer() {
+        if (answer == null) {
+            answer = new ArrayList<RelevanceAnswer>();
         }
-        return this.answerOrTuple;
+        return this.answer;
     }
 
 }
