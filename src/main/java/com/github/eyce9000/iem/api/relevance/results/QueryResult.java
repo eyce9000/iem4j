@@ -26,7 +26,7 @@ public class QueryResult {
 	private String query;
 
 	@XmlPath("Query/Result/Tuple")
-    protected List<ResultTuple> results;
+    protected List<ResultTuple> results = new ArrayList<ResultTuple>();
 	
 	@XmlPath("Query/Result/Answer")
 	@XmlJavaTypeAdapter(value=ResultAnswerAdapter.class)
