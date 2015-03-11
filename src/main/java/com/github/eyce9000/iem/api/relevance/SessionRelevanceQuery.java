@@ -130,7 +130,7 @@ public class SessionRelevanceQuery {
 	 * Sets the parameters
 	 * @param parameters a list of QueryParameters
 	 */
-	void setParameters(List<QueryParameter> parameters){
+	public void setParameters(List<QueryParameter> parameters){
 		this.parameters = parameters;
 		this.parameterMap = null;
 	}
@@ -205,7 +205,7 @@ public class SessionRelevanceQuery {
 	 * Returns a map of the parameters, where the key is the name of the parameter
 	 * @return the map of the parameters, where the key is the name of the parameter
 	 */
-	Map<String,QueryParameter> getParameterMap(){
+	public Map<String,QueryParameter> getParameterMap(){
 		if(parameterMap == null){
 			parameterMap = new LinkedHashMap<String,QueryParameter>();
 			for(QueryParameter param: parameters){
@@ -231,7 +231,7 @@ public class SessionRelevanceQuery {
 	 * @param column the column to place
 	 * @param index the index where the column will be put
 	 */
-	void setColumn(QueryResultColumn column, int index){
+	public void setColumn(QueryResultColumn column, int index){
 		if(index>=0 && index < columns.size()){
 			columns.set(index, column);
 			column.setIndex(index);

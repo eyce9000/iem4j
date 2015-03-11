@@ -76,7 +76,6 @@ public class IEMClient implements RelevanceClient{
 	private Unmarshaller unmarshaller;
 	private String username;
 	private Set<ActionLogger> actionLoggers = new HashSet<ActionLogger>();
-	private int version = 92;
 	
 	protected IEMClient(){}
 	
@@ -94,6 +93,13 @@ public class IEMClient implements RelevanceClient{
 			,password);
 	}
 
+	public IEMClient(URI uri, String username, String password) throws Exception{
+		this(ClientBuilderWrapper.defaultBuilder().build()
+			,uri
+			,username
+			,password);
+	}
+	
 	public IEMClient(Client client, String hostname, String username, String password) throws JAXBException{
 		this(client
 				,UriBuilder.fromPath("/").scheme("https").host(hostname).port(52311).build()

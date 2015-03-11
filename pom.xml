@@ -4,6 +4,11 @@
 	<artifactId>iem4j-client</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>IEM Client</name>
+	<scm>
+    <connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
+  </scm>
+
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -89,7 +94,25 @@
 	</distributionManagement>
 
 	<build>
+	  <finalName>$\{project.artifactId}-$\{project.version}-r$\{buildNumber}</finalName>
+		
 		<plugins>
+		  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Implementation-Build>$\{buildNumber}</Implementation-Build>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -99,6 +122,7 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>2.8.1</version>
@@ -106,6 +130,25 @@
 					<altDeploymentRepository>internal.repo::default::file://${project.build.directory}/../../mvn-repo</altDeploymentRepository>
 				</configuration>
 			</plugin>
+			
+			<plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.3</version>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doCheck>true</doCheck>
+          <doUpdate>true</doUpdate>
+        </configuration>
+      </plugin>
+      
 		</plugins>
 	</build>
 </project>
