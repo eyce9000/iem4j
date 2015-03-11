@@ -468,17 +468,25 @@ public class IEMClient implements RelevanceClient{
 	public Optional<BESAPI.Baseline> createBaseline(String siteType, String site, Baseline content) throws MalformedURLException{
 		WebTarget target = buildSiteTarget(apiRoot.path("/import/"),siteType,site);
 		Response resp = postBESContent(target,content);
-		Optional<BESAPI.Unknown> wrapper = getSingleBESAPIContent(resp,BESAPI.Unknown.class);
+		Optional<Object> wrapper = getSingleBESAPIContent(resp,Object.class);
 		if(!wrapper.isPresent())
 			return Optional.absent();
 		else{
-			BESAPI.Unknown original = wrapper.get();
-			BESAPI.Baseline baseline = new BESAPI.Baseline();
-			baseline.setID(original.getID());
-			baseline.setResource(original.getResource());
-			baseline.setName(original.getName());
-			baseline.setLastModified(original.getLastModified());
-			return Optional.of(baseline);
+			Object original = wrapper.get();
+			if(original instanceof BESAPI.Baseline)
+				return Optional.of((BESAPI.Baseline) original);
+			else if(original instanceof BESAPI.Unknown){
+				BESAPI.Unknown unknown = (BESAPI.Unknown) original;
+				BESAPI.Baseline baseline = new BESAPI.Baseline();
+				baseline.setID(unknown.getID());
+				baseline.setResource(unknown.getResource());
+				baseline.setName(unknown.getName());
+				baseline.setLastModified(unknown.getLastModified());
+				return Optional.of(baseline);
+			}
+			else{
+				throw new RuntimeException("Unexpected BESAPI type: "+original.getClass().getCanonicalName());
+			}
 		}
 			
 	}

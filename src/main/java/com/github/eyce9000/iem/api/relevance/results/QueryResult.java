@@ -55,6 +55,4 @@ public class QueryResult {
 	public String getError() {
 		return error;
 	}
-
-	
 }
