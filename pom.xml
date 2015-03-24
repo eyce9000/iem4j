@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.eyce9000</groupId>
 	<artifactId>iem4j-client</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>IEM Client</name>
 	<scm>
     <connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
@@ -82,26 +82,34 @@
 			<version>1.7.2</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<url>https://github.com/eyce9000/iem-client</url>
 
 	<distributionManagement>
 		<repository>
 			<id>internal.repo</id>
-			<uniqueVersion>false</uniqueVersion>
+			<uniqueVersion>true</uniqueVersion>
 			<name>Temporary Staging Repository</name>
 			<url>file://${project.build.directory}/../../mvn-repo</url>
 		</repository>
+		<!-- 
 		<snapshotRepository>
       <id>snapshot.repo</id>
       <uniqueVersion>false</uniqueVersion>
       <name>Temporary Snapshot Repository</name>
       <url>file://${project.build.directory}/../../mvn-repo</url>
 		</snapshotRepository>
+		 -->
 	</distributionManagement>
 
 	<build>
-	  <finalName>${project.artifactId}-${project.version}-r${buildNumber}</finalName>
+	  <finalName>${project.artifactId}-${project.version}</finalName>
 		
 		<plugins>
 		  <plugin>
@@ -129,7 +137,7 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
-			
+			<!-- 
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>2.8.1</version>
@@ -137,7 +145,7 @@
 					<altDeploymentRepository>snapshot.repo::default::file://${project.build.directory}/../../mvn-repo</altDeploymentRepository>
 				</configuration>
 			</plugin>
-			
+			 -->
 			<plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
@@ -151,8 +159,8 @@
           </execution>
         </executions>
         <configuration>
-          <doCheck>true</doCheck>
-          <doUpdate>true</doUpdate>
+          <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
         </configuration>
       </plugin>
       
