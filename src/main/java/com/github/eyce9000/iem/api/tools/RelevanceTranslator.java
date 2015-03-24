@@ -23,6 +23,8 @@ public class RelevanceTranslator {
 	private SessionRelevanceQuery groupQuery;
 	private IEMClient client;
 
+	protected RelevanceTranslator(){};
+	
 	public RelevanceTranslator(IEMClient client){
 		this.client = client;
 		groupQuery = SessionRelevanceBuilder
@@ -95,8 +97,21 @@ public class RelevanceTranslator {
 		for(RelevanceString r : relevance){
 			relevanceStrings.add("("+r.getValue()+")");
 		}
+		String builtRelevance = "";
+		for(int i=0; i<relevanceStrings.size(); i++){
+			String singleRelevance = relevanceStrings.get(i);
+			if(i> 0){
+				builtRelevance += " AND "+singleRelevance; 
+				if(i<relevanceStrings.size()-1){
+					builtRelevance = "("+builtRelevance+")";
+				}
+			}
+			else{
+				builtRelevance = singleRelevance;
+			}
+		}
 		RelevanceString newRelevance = new RelevanceString();
-		newRelevance.setValue(StringUtils.join(relevanceStrings," AND "));
+		newRelevance.setValue(builtRelevance);
 		return newRelevance;
 	}
 	private Optional<Integer> getGroupID(String groupName) throws RelevanceException{
