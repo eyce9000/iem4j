@@ -29,7 +29,7 @@ Then add this dependency:
 <dependency>
   <groupId>com.github.eyce9000</groupId>
   <artifactId>iem4j-client</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 </dependency>
 ```
 

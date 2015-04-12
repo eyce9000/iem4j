@@ -2,6 +2,8 @@ package com.github.eyce9000.iem.api;
 
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
@@ -19,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -31,6 +34,27 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.joda.time.DateTime;
 
@@ -45,6 +69,7 @@ import com.bigfix.schemas.bes.SourcedFixletAction;
 import com.bigfix.schemas.bes.Task;
 import com.bigfix.schemas.besapi.BESAPI;
 import com.bigfix.schemas.besapi.BESAPI.Query;
+import com.bigfix.schemas.besapi.BESAPI.SiteFile;
 import com.bigfix.schemas.besapi.ComputerSetting;
 import com.bigfix.schemas.besapi.RelevanceAnswer;
 import com.bigfix.schemas.besapi.RelevanceResult;
@@ -73,9 +98,11 @@ public class IEMClient implements RelevanceClient{
 	private Client client;
 	private HttpBasicAuthFilter authFilter;
 	private WebTarget apiRoot, root;
-	private Unmarshaller unmarshaller;
+	private Unmarshaller queryUnmarshaller;
 	private String username;
 	private Set<ActionLogger> actionLoggers = new HashSet<ActionLogger>();
+	HttpClient apacheHttpClient;
+	private Unmarshaller	besUnmarshaller;
 	
 	protected IEMClient(){}
 	
@@ -110,18 +137,31 @@ public class IEMClient implements RelevanceClient{
 	public IEMClient(Client client, URI uri, String username, String password) throws JAXBException{
 		this.client = client;
 		this.baseURI = uri;
-		switchUser(username, password);
-        this.username = username;
-        JAXBContext context = JAXBContext.newInstance(QueryResult.class);
-		unmarshaller = context.createUnmarshaller();
-		
-	}
-	
-	public void switchUser(String username, String password){
 
 		authFilter = new HttpBasicAuthFilter(username,password);
 		root = client.target(UriBuilder.fromUri(baseURI)).register(authFilter);
         apiRoot = root.path("/api/");
+        
+        this.username = username;
+        JAXBContext context = JAXBContext.newInstance(QueryResult.class);
+        JAXBContext besContext = JAXBContext.newInstance(BESAPI.class,BES.class);
+		queryUnmarshaller = context.createUnmarshaller();
+		besUnmarshaller = besContext.createUnmarshaller();
+		
+		
+		SSLContext sslContext = client.getSslContext();
+		SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(sslContext,SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		Registry<ConnectionSocketFactory> r = RegistryBuilder.<ConnectionSocketFactory>create()
+				.register(uri.getScheme(),factory)
+				.build();
+		HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(r);
+		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(AuthScope.ANY, 
+		    new UsernamePasswordCredentials(username, password));
+		apacheHttpClient = HttpClients.custom()
+			.setDefaultCredentialsProvider(credentialsProvider)
+			.setConnectionManager(cm)
+			.build();
 	}
 	
 	public void addActionLogger(ActionLogger logger){
@@ -341,6 +381,16 @@ public class IEMClient implements RelevanceClient{
 		return getBESAPIContent(apiRoot.path("/sites").request().get(),BESAPI.Site.class);
 	}
 	
+	public void updateCustomSite(Site site){
+		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),"custom",site.getName());
+		putBESContent(target,site,Site.class);
+	}
+	
+	public void createCustomSite(Site site){
+		BES bes = new BES();
+		bes.getFixletOrTaskOrAnalysis().add(site);
+		BESAPI besapi = this.importContent("custom", site.getName(), bes);
+	}
 	
 	//*******************************************************************
 	// C O N T E N T   M E T H O D S
@@ -535,6 +585,50 @@ public class IEMClient implements RelevanceClient{
 	}
 	
 
+	
+	//*******************************************************************
+	// F I L E S
+	//*******************************************************************
+	public List<BESAPI.SiteFile> getFiles(String siteType, String site){
+		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),siteType,site).path("/files");
+		return getBESAPIContent(target.request().get(),BESAPI.SiteFile.class);
+	}
+	
+	public File downloadFile(String siteType, String site, SiteFile siteFile){
+		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),siteType,site).path("/file/{fileid}").resolveTemplate("fileid", siteFile.getID().toString());
+		File file = target.request().get(File.class);
+		File outputFile = new File(file.getParentFile(),siteFile.getName());
+		file.renameTo(outputFile);
+		return outputFile;
+	}
+	
+	public List<BESAPI.SiteFile> createFiles(String siteType, String site, File... files){
+		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),siteType,site).path("/files");
+		
+	    HttpPost httpPost = new HttpPost(target.getUri());
+	    MultipartEntity reqEntity = new MultipartEntity();
+	    for(File file:files){
+	    	FileBody uploadFilePart = new FileBody(file);
+	    	reqEntity.addPart("file", uploadFilePart);
+	    }
+	    httpPost.setEntity(reqEntity);
+	    try {
+			HttpResponse response = apacheHttpClient.execute(httpPost);
+			return getBESAPIContent(response,BESAPI.SiteFile.class);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	//*******************************************************************
+	// D A S H B O A R D
+	//*******************************************************************
+	
+	//TODO IMPLEMENT
+	public BESAPI getDashoardVariables(){
+		return null;
+	}
+	
 	//*******************************************************************
 	// R E S P O N S E  /  G E T  M E T H O D S
 	//*******************************************************************
@@ -553,14 +647,31 @@ public class IEMClient implements RelevanceClient{
 			return Optional.of(list.get(0));
 	}
 	
-	protected <T> List<T> getBESContent(Response resp, Class<T> clazz){
-		BES bes = handleResponse(resp,BES.class);
-		bes.getFixletOrTaskOrAnalysis();
+	protected <T> Optional<T> getSingleBESContent(HttpResponse resp, Class<T> clazz){
+		if(resp.getStatusLine().getStatusCode()==404)
+			return Optional.absent();
+		List<T> list = getBESContent(resp,clazz);
+		if(list.isEmpty())
+			return Optional.absent();
+		else
+			return Optional.of(list.get(0));
+	}
+	
+	protected <T> List<T> getBESContent(BES bes){
 		List<T> values = new ArrayList<T>();
 		for(Object object : bes.getFixletOrTaskOrAnalysis()){
 			values.add((T)object);
 		}
 		return values;
+	}
+	
+	protected <T> List<T> getBESContent(Response resp, Class<T> clazz){
+		BES bes = handleResponse(resp,BES.class);
+		return getBESContent(bes);
+	}
+	protected <T> List<T> getBESContent(HttpResponse resp, Class<T> clazz){
+		BES bes = handleResponse(resp,BES.class);
+		return getBESContent(bes);
 	}
 
 	protected <T> Optional<T> getSingleBESAPIContent(Response resp, Class<T> clazz){
@@ -573,8 +684,28 @@ public class IEMClient implements RelevanceClient{
 			return Optional.of(list.get(0));
 	}
 	
+
+	protected <T> Optional<T> getSingleBESAPIContent(HttpResponse resp, Class<T> clazz){
+		if(resp.getStatusLine().getStatusCode()==404)
+			return Optional.absent();
+		List<T> list = getBESAPIContent(resp,clazz);
+		if(list.isEmpty())
+			return Optional.absent();
+		else
+			return Optional.of(list.get(0));
+	}
+	
 	protected <T> List<T> getBESAPIContent(Response resp, Class<T> clazz){
 		BESAPI besapi = handleResponse(resp,BESAPI.class);
+		return getBESAPIContent(besapi);
+	}
+	
+	protected <T> List<T> getBESAPIContent(HttpResponse resp, Class<T> clazz){
+		BESAPI besapi = handleResponse(resp,BESAPI.class);
+		return getBESAPIContent(besapi);
+	}
+
+	protected <T> List<T> getBESAPIContent(BESAPI besapi) {
 		List<T> values = new ArrayList<T>();
 		for(JAXBElement<?> wrapper : besapi.getFixletOrReplicationServerOrReplicationLink()){
 			values.add((T)wrapper.getValue());
@@ -613,6 +744,31 @@ public class IEMClient implements RelevanceClient{
 				while((line=reader.readLine())!=null)
 					error += line +"\n";
 				throw new BadRequestException(resp.getStatus()+": "+error);
+			}
+			catch(Exception ex){
+				throw new BadRequestException(ex);
+			}
+		}
+	}
+	
+
+	protected <T> T handleResponse(HttpResponse resp,Class<T> clazz){
+		int code =resp.getStatusLine().getStatusCode(); 
+		if(code>=200 && code<300){
+			try {
+				return (T)besUnmarshaller.unmarshal(resp.getEntity().getContent());
+			} catch (Exception e) {
+				throw new BadRequestException(e);
+			}
+		}
+		else{
+			try{
+				String error = "";
+				BufferedReader reader = new BufferedReader(new InputStreamReader(resp.getEntity().getContent()));
+				String line = null;
+				while((line=reader.readLine())!=null)
+					error += line +"\n";
+				throw new BadRequestException(code+": "+error);
 			}
 			catch(Exception ex){
 				throw new BadRequestException(ex);
@@ -674,7 +830,7 @@ public class IEMClient implements RelevanceClient{
 		try {
 			String data = "relevance="+URLEncoder.encode(query, "UTF-8");
 			Response response = target.request(MediaType.APPLICATION_XML).post(Entity.text(data));
-			return (QueryResult)unmarshaller.unmarshal((InputStream)response.getEntity());
+			return (QueryResult)queryUnmarshaller.unmarshal((InputStream)response.getEntity());
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -754,7 +910,4 @@ public class IEMClient implements RelevanceClient{
     	}
     	return columns;
 	}
-	
-	
-
 }

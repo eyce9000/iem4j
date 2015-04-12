@@ -39,9 +39,9 @@ import com.github.eyce9000.iem.webreports.relevance.RequestBuilder;
 public class WebreportsClient implements RelevanceClient{
 	private String password;
 	private String username;
-	private String token;
 	private WebTarget apiRoot;
 	private URI	uriBase;
+	private TokenHolder tokenHolder = new TimedTokenHolder();
 
 	public WebreportsClient(URI uri, String username, String password) throws JAXBException, Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build(),uri,username,password);
@@ -63,26 +63,41 @@ public class WebreportsClient implements RelevanceClient{
         apiRoot = client.target(UriBuilder.fromUri(uriBase));
 	}
 	
+	public void setTokenHolder(TokenHolder holder){
+		this.tokenHolder = holder;
+	}
+	
+	private synchronized String getToken() throws RelevanceException{
+		String token = tokenHolder.getToken();
+		if(token==null){
+			RequestBuilder builder = new RequestBuilder();
+			builder.login(username, password);
+			Envelope request = builder.buildRelevanceRequest("\"test\"");
+			Envelope response = request(request);
+			token = response.getHeader().getResponseHeader().getSessionToken();
+			tokenHolder.setToken(token);
+		}
+		return token;
+	}
 	
 	private StructuredRelevanceResult executeQuery(String relevance) throws JAXBException, RelevanceException{
 		RequestBuilder builder = new RequestBuilder();
-		if(token==null)
-			builder.login(username, password);
-		else
-			builder.authenticate(username, token);
+		builder.authenticate(username, getToken());
 		
 		Envelope envelope = builder.buildRelevanceRequest(relevance);
+		Envelope response = request(envelope);
 		
-		Entity<Envelope> entity = Entity.entity(envelope, MediaType.TEXT_XML);
+		return response.getBody().getStructuredRelevanceResponse().getStructuredRelevanceResult();
+	}
+	
+	private Envelope request(Envelope request) throws RelevanceException{
+		Entity<Envelope> entity = Entity.entity(request, MediaType.TEXT_XML);
 		
 		Envelope response = apiRoot.request().accept(MediaType.TEXT_XML).post(entity, Envelope.class);
 		if(response.getBody().getFaultResponse()!=null){
 			throw new RelevanceException(response.getBody().getFaultResponse().getFaultString());
 		}
-		
-		token = response.getHeader().getResponseHeader().getSessionToken();
-		
-		return response.getBody().getStructuredRelevanceResponse().getStructuredRelevanceResult();
+		return response;
 	}
 	
 	@Override

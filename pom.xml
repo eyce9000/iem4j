@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.eyce9000</groupId>
 	<artifactId>iem4j-client</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>IEM Client</name>
 	<scm>
     <connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
@@ -18,9 +18,15 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.2.3</version>
+			<version>${httpcomponents.version}</version>
 			<optional>true</optional>
 		</dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+      <version>${httpcomponents.version}</version>
+      <optional>true</optional>
+    </dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
@@ -166,4 +172,7 @@
       
 		</plugins>
 	</build>
+	<properties>
+		<httpcomponents.version>4.4.1</httpcomponents.version>
+	</properties>
 </project>

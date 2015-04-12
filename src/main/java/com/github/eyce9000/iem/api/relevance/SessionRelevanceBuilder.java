@@ -22,6 +22,13 @@ public abstract class SessionRelevanceBuilder {
 		return this;
 	}
 	
+	public SessionRelevanceBuilder addColumns(List<String> names){
+		for(String name:names){
+			addColumn(name);
+		}
+		return this;
+	}
+	
 	public SessionRelevanceBuilder addColumn(String name){
 		columns.add(new QueryResultColumn(name,DataType.string));
 		return this;
