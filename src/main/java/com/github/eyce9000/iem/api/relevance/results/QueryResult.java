@@ -14,7 +14,6 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import org.eclipse.persistence.oxm.annotations.XmlPath;
 
 import com.bigfix.schemas.besapi.RelevanceAnswer;
-import com.bigfix.schemas.besapi.RelevanceTuple;
 import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter;
 import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter.Answer;
 

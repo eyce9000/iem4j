@@ -61,6 +61,7 @@ import org.joda.time.DateTime;
 import com.bigfix.schemas.bes.Action;
 import com.bigfix.schemas.bes.Analysis;
 import com.bigfix.schemas.bes.BES;
+import com.bigfix.schemas.bes.BES.CustomSite;
 import com.bigfix.schemas.bes.Baseline;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.SingleAction;
@@ -73,7 +74,6 @@ import com.bigfix.schemas.besapi.BESAPI.SiteFile;
 import com.bigfix.schemas.besapi.ComputerSetting;
 import com.bigfix.schemas.besapi.RelevanceAnswer;
 import com.bigfix.schemas.besapi.RelevanceResult;
-import com.bigfix.schemas.besapi.RelevanceTuple;
 import com.github.eyce9000.iem.api.actions.ActionBuilder;
 import com.github.eyce9000.iem.api.actions.ActionTargetBuilder;
 import com.github.eyce9000.iem.api.actions.logger.ActionLogger;
@@ -381,12 +381,12 @@ public class IEMClient implements RelevanceClient{
 		return getBESAPIContent(apiRoot.path("/sites").request().get(),BESAPI.Site.class);
 	}
 	
-	public void updateCustomSite(Site site){
+	public void updateCustomSite(CustomSite site){
 		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),"custom",site.getName());
 		putBESContent(target,site,Site.class);
 	}
 	
-	public void createCustomSite(Site site){
+	public void createCustomSite(CustomSite site){
 		BES bes = new BES();
 		bes.getFixletOrTaskOrAnalysis().add(site);
 		BESAPI besapi = this.importContent("custom", site.getName(), bes);
@@ -531,15 +531,6 @@ public class IEMClient implements RelevanceClient{
 			Object original = wrapper.get();
 			if(original instanceof BESAPI.Baseline)
 				return Optional.of((BESAPI.Baseline) original);
-			else if(original instanceof BESAPI.Unknown){
-				BESAPI.Unknown unknown = (BESAPI.Unknown) original;
-				BESAPI.Baseline baseline = new BESAPI.Baseline();
-				baseline.setID(unknown.getID());
-				baseline.setResource(unknown.getResource());
-				baseline.setName(unknown.getName());
-				baseline.setLastModified(unknown.getLastModified());
-				return Optional.of(baseline);
-			}
 			else{
 				throw new RuntimeException("Unexpected BESAPI type: "+original.getClass().getCanonicalName());
 			}

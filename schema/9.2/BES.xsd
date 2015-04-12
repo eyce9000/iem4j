@@ -6,15 +6,27 @@
       <xs:choice maxOccurs="unbounded">
 
         <xs:element name="Fixlet" type="FixletWithActions" />
-        <xs:element name="Task" type="FixletWithActions" />
+        <xs:element name="Task" type="Task" />
         <xs:element name="Analysis" type="Analysis" />
         <xs:element name="SingleAction" type="SingleAction"/>
         <xs:element name="SourcedFixletAction" type="SourcedFixletAction"/>
         <xs:element name="MultipleActionGroup" type="MultipleActionGroup"/>
         <xs:element name="Baseline" type="Baseline"/>
         <xs:element name="ComputerGroup" type="ComputerGroup"/>
-        <xs:element name="CustomSite" type="Site"/>
-        <xs:element name="ActionSite" type="Site"/>        
+        <xs:element name="CustomSite">
+          <xs:complexType>
+				    <xs:complexContent>
+				      <xs:extension base="Site"></xs:extension>
+				    </xs:complexContent>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="ActionSite">
+          <xs:complexType>
+            <xs:complexContent>
+              <xs:extension base="Site"></xs:extension>
+            </xs:complexContent>
+          </xs:complexType>
+        </xs:element>        
         
         <xs:element name="ExternalSite">
           <xs:complexType>
@@ -60,7 +72,11 @@
       <!--ignored-->
       <xs:element name="EvaluateOnClient" type="xs:boolean" minOccurs="0" />
       <!--ignored-->
-      <xs:group maxOccurs="unbounded" ref="ComputerGroup" />
+      <xs:choice maxOccurs="unbounded">
+	      <xs:element name="SearchComponentRelevance" type="SearchComponentRelevance" />
+	      <xs:element name="SearchComponentPropertyReference" type="SearchComponentPropertyReference" />
+	      <xs:element name="SearchComponentGroupReference" type="SearchComponentGroupReference" />
+	    </xs:choice>
     </xs:sequence>
     <xs:attribute name="SkipUI" type="xs:boolean"/>
   </xs:complexType>
@@ -77,22 +93,12 @@
                     <xs:sequence>
                       <xs:element name="BaselineComponent" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
-                          <xs:choice>
-                            <xs:sequence>
-                              <xs:element name="Relevance" type="RelevanceString" />
-                              <xs:element name="Delay" type="NonNegativeTimeInterval" minOccurs="0" />
-                              <xs:sequence minOccurs="0">
-                                <xs:element name="ActionScript" type="ActionScript" />
-                                <xs:element name="SuccessCriteria" type="ActionSuccessCriteria" minOccurs="0" />
-                              </xs:sequence>
-                            </xs:sequence>
-                            <xs:sequence>
-                              <xs:element name="ActionScript" type="ActionScript" />
-                              <xs:element name="SuccessCriteria" type="ActionSuccessCriteria" minOccurs="0" />
-                              <xs:element name="Relevance" type="RelevanceString" />
-                              <xs:element name="Delay" type="NonNegativeTimeInterval" minOccurs="0" />
-                            </xs:sequence>
-                          </xs:choice>
+                          <xs:sequence>
+                            <xs:element name="ActionScript" type="ActionScript" />
+                            <xs:element name="SuccessCriteria" type="ActionSuccessCriteria" minOccurs="0" />
+                            <xs:element name="Relevance" type="RelevanceString" />
+                            <xs:element name="Delay" type="NonNegativeTimeInterval" minOccurs="0" />
+                          </xs:sequence>
                           <xs:attribute name="Name" type="xs:normalizedString" />
                           <xs:attribute name="ActionName" type="xs:normalizedString" />
                           <xs:attribute name="IncludeInRelevance" type="xs:boolean" />
@@ -209,7 +215,11 @@
             <xs:element name="CustomGroup" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:group ref="ComputerGroup" maxOccurs="unbounded"/>
+                  <xs:choice maxOccurs="unbounded">
+							      <xs:element name="SearchComponentRelevance" type="SearchComponentRelevance" />
+							      <xs:element name="SearchComponentPropertyReference" type="SearchComponentPropertyReference" />
+							      <xs:element name="SearchComponentGroupReference" type="SearchComponentGroupReference" />
+							    </xs:choice>
                 </xs:sequence>
                 <xs:attribute name="JoinByIntersection" type="xs:boolean" />
               </xs:complexType>
@@ -266,12 +276,7 @@
       <xs:element name="Description" type="xs:string" />
       <xs:choice>
         <xs:element name="Relevance" type="RelevanceString" maxOccurs="unbounded" />
-        <xs:element name="GroupRelevance">
-          <xs:complexType>
-            <xs:group maxOccurs="unbounded" ref="ComputerGroup" />
-            <xs:attribute name="JoinByIntersection" type="xs:boolean" />
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="GroupRelevance" type="GroupRelevance"/>
       </xs:choice>
       <xs:element name="Category" type="xs:normalizedString" minOccurs="0" />
       <xs:element name="WizardData" minOccurs="0">
@@ -316,6 +321,11 @@
     </xs:complexContent>
   </xs:complexType>
 
+  <xs:complexType name="Task">
+    <xs:complexContent>
+      <xs:extension base="FixletWithActions"></xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="FixletAction">
     <xs:sequence>
       <xs:element name="Description" minOccurs="0">
@@ -401,58 +411,73 @@
       <xs:extension base="xs:string" />
     </xs:simpleContent>
   </xs:complexType>
-
-  <xs:group name="ComputerGroup">
-    <xs:choice>
-      <xs:element name="SearchComponentRelevance">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="Relevance" type="RelevanceString" />
-          </xs:sequence>
-          <xs:attribute name="Comparison">
-            <xs:simpleType>
-              <xs:restriction base="xs:normalizedString">
-                <xs:enumeration value="IsTrue" />
-                <xs:enumeration value="IsFalse" />
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:attribute>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="SearchComponentPropertyReference">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="SearchText" type="xs:normalizedString" />
-            <xs:element name="Relevance" type="RelevanceString" />
-          </xs:sequence>
-          <xs:attribute name="PropertyName" type="xs:normalizedString" />
-          <xs:attribute name="Comparison">
-            <xs:simpleType>
-              <xs:restriction base="xs:normalizedString">
-                <xs:enumeration value="Contains" />
-                <xs:enumeration value="DoesNotContain" />
-                <xs:enumeration value="Equals" />
-                <xs:enumeration value="DoesNotEqual" />
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:attribute>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="SearchComponentGroupReference">
-        <xs:complexType>
-          <xs:attribute name="GroupName" type="xs:normalizedString" />
-          <xs:attribute name="Comparison">
-            <xs:simpleType>
-              <xs:restriction base="xs:normalizedString">
-                <xs:enumeration value="IsMember" />
-                <xs:enumeration value="IsNotMember" />
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:attribute>
-        </xs:complexType>
-      </xs:element>
+  
+  <xs:complexType name="GroupRelevance">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="SearchComponentRelevance" type="SearchComponentRelevance" />
+      <xs:element name="SearchComponentPropertyReference" type="SearchComponentPropertyReference" />
+      <xs:element name="SearchComponentGroupReference" type="SearchComponentGroupReference" />
     </xs:choice>
-  </xs:group>
+    <xs:attribute name="JoinByIntersection" type="xs:boolean" />
+  </xs:complexType>
+  
+  <xs:complexType name="SearchComponent"></xs:complexType>
+
+  <xs:complexType name="SearchComponentRelevance">
+    <xs:complexContent>
+      <xs:extension base="SearchComponent">
+        <xs:sequence>
+          <xs:element name="Relevance" type="RelevanceString" />
+        </xs:sequence>
+        <xs:attribute name="Comparison">
+          <xs:simpleType>
+            <xs:restriction base="xs:normalizedString">
+              <xs:enumeration value="IsTrue" />
+              <xs:enumeration value="IsFalse" />
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="ComparisonType">
+    <xs:restriction base="xs:normalizedString">
+      <xs:enumeration value="Contains" />
+      <xs:enumeration value="DoesNotContain" />
+      <xs:enumeration value="Equals" />
+      <xs:enumeration value="DoesNotEqual" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="SearchComponentPropertyReference">
+    <xs:complexContent>
+      <xs:extension base="SearchComponent">
+        <xs:sequence>
+          <xs:element name="SearchText" type="xs:normalizedString" />
+          <xs:element name="Relevance" type="RelevanceString" />
+        </xs:sequence>
+        <xs:attribute name="PropertyName" type="xs:normalizedString" />
+        <xs:attribute name="Comparison" type="ComparisonType" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  
+  <xs:simpleType name="MembershipComparisonType">
+    <xs:restriction base="xs:normalizedString">
+      <xs:enumeration value="IsMember" />
+      <xs:enumeration value="IsNotMember" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="SearchComponentGroupReference">
+    <xs:complexContent>
+      <xs:extension base="SearchComponent">
+        <xs:attribute name="GroupName" type="xs:normalizedString" />
+        <xs:attribute name="Comparison" type="MembershipComparisonType" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
 
   <xs:simpleType name="ObjectName">
     <xs:restriction base="xs:normalizedString">
@@ -495,7 +520,7 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-  
+  <!-- 
   <xs:element name="ActionSettings">
 		<xs:complexType>
 			<xs:sequence>
@@ -503,6 +528,7 @@
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
+	 -->
 	<xs:complexType name="ActionSettings">
 		<xs:sequence>
 			<!-- begin pre-7.0 action options -->
