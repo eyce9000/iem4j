@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.bigfix.schemas.bes.ComputerGroup;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.GroupRelevance;
 import com.bigfix.schemas.bes.RelevanceString;
@@ -34,22 +35,24 @@ public class RelevanceTranslator {
 	}
 
 	public RelevanceString buildRelevance(FixletWithActions fixlet) throws Exception{
+		
 		if(fixlet.getRelevance()!=null && fixlet.getRelevance().size() > 0)
 			return buildRelevance(fixlet.getRelevance());
 		else
 			return buildRelevance(fixlet.getGroupRelevance());
 	}
 	
-	public RelevanceString buildRelevance(GroupRelevance relevance) throws Exception{
+	public RelevanceString buildRelevance(GroupRelevance group) throws Exception{
 		String function;
-		if(relevance.isJoinByIntersection())
+		
+		if(group.isJoinByIntersection())
 			function = " AND ";
 		else
 			function = " OR ";
 		
 		List<String> relevanceStrings = new ArrayList<String>();
 		
-		for(SearchComponent component : relevance.getSearchComponent()){
+		for(SearchComponent component : group.getSearchComponent()){
 			String r = null;
 			if(component instanceof SearchComponentRelevance){
 				r = ((SearchComponentRelevance)component).getRelevance().getValue();
