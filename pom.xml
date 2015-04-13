@@ -5,10 +5,10 @@
 	<version>1.0.1-SNAPSHOT</version>
 	<name>IEM Client</name>
 	<scm>
-    <connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
-  </scm>
+		<connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
+	</scm>
 
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -21,12 +21,12 @@
 			<version>${httpcomponents.version}</version>
 			<optional>true</optional>
 		</dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-      <version>${httpcomponents.version}</version>
-      <optional>true</optional>
-    </dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>${httpcomponents.version}</version>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
@@ -104,36 +104,67 @@
 			<name>Temporary Staging Repository</name>
 			<url>file://${project.build.directory}/../../mvn-repo</url>
 		</repository>
-		<!-- 
-		<snapshotRepository>
-      <id>snapshot.repo</id>
-      <uniqueVersion>false</uniqueVersion>
-      <name>Temporary Snapshot Repository</name>
-      <url>file://${project.build.directory}/../../mvn-repo</url>
-		</snapshotRepository>
-		 -->
+		<!-- <snapshotRepository> <id>snapshot.repo</id> <uniqueVersion>false</uniqueVersion> <name>Temporary Snapshot Repository</name> <url>file://${project.build.directory}/../../mvn-repo</url> </snapshotRepository> -->
 	</distributionManagement>
 
 	<build>
-	  <finalName>${project.artifactId}-${project.version}</finalName>
-		
+		<finalName>${project.artifactId}-${project.version}</finalName>
+
 		<plugins>
-		  <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.1</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-            </manifest>
-            <manifestEntries>
-              <Implementation-Build>${buildNumber}</Implementation-Build>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-      
+			<plugin>
+				<groupId>org.apache.cxf</groupId>
+				<artifactId>cxf-xjc-plugin</artifactId>
+				<version>2.3.0</version>
+				<configuration>
+					<extensions>
+						<extension>net.java.dev.jaxb2-commons:jaxb-fluent-api:2.1.8</extension>
+					</extensions>
+				</configuration>
+				<executions>
+					<execution>
+						<id>generate-xsd-sources</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>xsdtojava</goal>
+						</goals>
+						<configuration>
+							<sourceRoot>${basedir}/target/generated-sources/src/main/java/</sourceRoot>
+							<xsdOptions>
+                <xsdOption>
+                  <xsd>${basedir}/src/main/resources/BES.xsd</xsd>
+                  <bindingFile>${basedir}/src/main/resources/BES.xjb</bindingFile>
+                  <extensionArgs>
+                    <extensionArg>-Xfluent-api</extensionArg>
+                  </extensionArgs>
+                </xsdOption>
+                <xsdOption>
+                  <xsd>${basedir}/src/main/resources/BESAPI.xsd</xsd>
+                  <bindingFile>${basedir}/src/main/resources/BESAPI.xjb</bindingFile>
+                  <extensionArgs>
+                    <extensionArg>-Xfluent-api</extensionArg>
+                  </extensionArgs>
+                </xsdOption>
+							</xsdOptions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.1</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<Implementation-Build>${buildNumber}</Implementation-Build>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -143,34 +174,56 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
-			<!-- 
+			<!-- <plugin> <artifactId>maven-deploy-plugin</artifactId> <version>2.8.1</version> <configuration> <altDeploymentRepository>snapshot.repo::default::file://${project.build.directory}/../../mvn-repo</altDeploymentRepository> 
+				</configuration> </plugin> -->
 			<plugin>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8.1</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.3</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
-					<altDeploymentRepository>snapshot.repo::default::file://${project.build.directory}/../../mvn-repo</altDeploymentRepository>
+					<doCheck>false</doCheck>
+					<doUpdate>false</doUpdate>
 				</configuration>
 			</plugin>
-			 -->
-			<plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>1.3</version>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>create</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <doCheck>false</doCheck>
-          <doUpdate>false</doUpdate>
-        </configuration>
-      </plugin>
-      
+
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.cxf</groupId>
+										<artifactId>cxf-xjc-plugin</artifactId>
+										<versionRange>[2.3.0,)</versionRange>
+										<goals>
+											<goal>xsdtojava</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<properties>
 		<httpcomponents.version>4.4.1</httpcomponents.version>

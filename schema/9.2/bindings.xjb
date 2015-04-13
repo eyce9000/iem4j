@@ -9,5 +9,13 @@
         <bindings node="//xs:complexType[@name='ComputerGroup']//xs:choice">
                 <property name="searchComponent"/>
         </bindings>
+		    <schemaBindings>
+		      <package name="com.bigfix.schemas.bes"/>
+		    </schemaBindings>
    </bindings>
+    <bindings schemaLocation="BESAPI.xsd">
+        <schemaBindings>
+          <package name="com.bigfix.schemas.besapi"/>
+        </schemaBindings>
+    </bindings>
 </bindings> 

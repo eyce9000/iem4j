@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bindings xmlns="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+          version="2.1">
+    <globalBindings choiceContentProperty="false"/>
+    <bindings schemaLocation="BESAPI.xsd">
+        <schemaBindings>
+          <package name="com.bigfix.schemas.besapi"/>
+        </schemaBindings>
+    </bindings>
+</bindings> 
