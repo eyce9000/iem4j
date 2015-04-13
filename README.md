@@ -106,7 +106,7 @@ RelevanceAPI client = new IEMAPI(
 List<Map<String,Object>> restResults = client.executeQuery(query);
 
 //Run Relevance Query through Webreports API
-RelevanceAPI relevanceClient = new WebreportsClient(
+RelevanceAPI relevanceClient = new WebreportsAPI(
    "hostname",
    "webreportsUsername",
    "webreportsPassword");

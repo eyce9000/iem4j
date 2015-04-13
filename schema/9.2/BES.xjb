@@ -6,5 +6,8 @@
         <bindings node="//xs:complexType[@name='GroupRelevance']//xs:choice">
                 <property name="searchComponent"/>
         </bindings>
+        <bindings node="//xs:complexType[@name='ComputerGroup']//xs:choice">
+                <property name="searchComponent"/>
+        </bindings>
    </bindings>
 </bindings> 

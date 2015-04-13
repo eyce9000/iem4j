@@ -27,7 +27,7 @@ public class BaselineSynchronizer {
 	
 	private SessionRelevanceQuery fixletQuery,groupQuery;
 	private RelevanceTranslator translator;
-	private IEMAPI client;
+	protected IEMAPI client;
 	
 	public BaselineSynchronizer(IEMAPI client){
 		this.client = client;
