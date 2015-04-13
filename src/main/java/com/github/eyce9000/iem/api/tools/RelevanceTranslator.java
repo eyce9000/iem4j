@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.bigfix.schemas.bes.ComputerGroup;
+import com.bigfix.schemas.bes.Fixlet;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.GroupRelevance;
 import com.bigfix.schemas.bes.RelevanceString;
@@ -14,7 +14,8 @@ import com.bigfix.schemas.bes.SearchComponent;
 import com.bigfix.schemas.bes.SearchComponentGroupReference;
 import com.bigfix.schemas.bes.SearchComponentPropertyReference;
 import com.bigfix.schemas.bes.SearchComponentRelevance;
-import com.github.eyce9000.iem.api.IEMClient;
+import com.bigfix.schemas.bes.TrueFalseComparison;
+import com.github.eyce9000.iem.api.IEMAPI;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
@@ -22,11 +23,12 @@ import com.google.common.base.Optional;
 
 public class RelevanceTranslator {
 	private SessionRelevanceQuery groupQuery;
-	private IEMClient client;
+	private IEMAPI client;
+	public enum Function{AND,OR}
 
 	protected RelevanceTranslator(){};
 	
-	public RelevanceTranslator(IEMClient client){
+	public RelevanceTranslator(IEMAPI client){
 		this.client = client;
 		groupQuery = SessionRelevanceBuilder
 				.fromRelevance("(id of it,name of it) of bes computer groups whose (name of it = \"${groupName}\")")
@@ -34,33 +36,29 @@ public class RelevanceTranslator {
 				.build();
 	}
 
-	public RelevanceString buildRelevance(FixletWithActions fixlet) throws Exception{
-		
+	public RelevanceString buildRelevance(Fixlet fixlet) throws Exception{
 		if(fixlet.getRelevance()!=null && fixlet.getRelevance().size() > 0)
 			return buildRelevance(fixlet.getRelevance());
 		else
 			return buildRelevance(fixlet.getGroupRelevance());
 	}
 	
-	public RelevanceString buildRelevance(GroupRelevance group) throws Exception{
-		String function;
-		
-		if(group.isJoinByIntersection())
-			function = " AND ";
+	public RelevanceString buildRelevance(GroupRelevance relevance) throws Exception{
+		Function function;
+		if(relevance.isJoinByIntersection())
+			function = Function.AND;
 		else
-			function = " OR ";
+			function = Function.OR;
 		
 		List<String> relevanceStrings = new ArrayList<String>();
 		
-		for(SearchComponent component : group.getSearchComponent()){
+		for(SearchComponent component : relevance.getSearchComponent()){
 			String r = null;
 			if(component instanceof SearchComponentRelevance){
-				r = ((SearchComponentRelevance)component).getRelevance().getValue();
-				r = "exists true whose (if true then ("+r+") else false)";
+				r = buildRelevance((SearchComponentRelevance)component).getValue();
 			}
 			if(component instanceof SearchComponentPropertyReference){
-				r = ((SearchComponentPropertyReference)component).getRelevance().getValue();
-				r = "exists true whose (if true then ("+r+") else false)";
+				r = buildRelevance((SearchComponentPropertyReference)component).getValue();
 			}
 			if(component instanceof SearchComponentGroupReference){
 				r = buildRelevance((SearchComponentGroupReference)component).getValue();
@@ -68,10 +66,32 @@ public class RelevanceTranslator {
 			if(r!=null)
 				relevanceStrings.add("("+r+")");
 		}
-		String joined = "(version of client >= \"6.0.0.0\") AND ("+StringUtils.join(relevanceStrings,function)+")";
+		String joined = "(version of client >= \"6.0.0.0\") AND ("+StringUtils.join(relevanceStrings," "+function.name()+" ")+")";
 		RelevanceString result = new RelevanceString();
 		result.setValue(joined);
 		return result;
+	}
+
+	public RelevanceString buildRelevance(SearchComponentPropertyReference component) throws Exception{
+		String r = component.getRelevance().getValue();
+		String format = "exists true whose (if true then ("+r+") else false)";
+		RelevanceString formattedRelevance = new RelevanceString();
+		formattedRelevance.setValue(format);
+		return formattedRelevance;
+	}
+	public RelevanceString buildRelevance(SearchComponentRelevance component) throws Exception{
+		String r = component.getRelevance().getValue();
+		String format = "exists true whose (if true then ("+r+") else false)";
+		switch(component.getComparison()){
+			case IS_TRUE:
+				break;
+			case IS_FALSE:
+				format = "not ("+format+")";
+				break;
+		}
+		RelevanceString formattedRelevance = new RelevanceString();
+		formattedRelevance.setValue(format);
+		return formattedRelevance;
 	}
 	
 	public RelevanceString buildRelevance(SearchComponentGroupReference component) throws Exception{
@@ -94,6 +114,10 @@ public class RelevanceTranslator {
 	}
 
 	public RelevanceString buildRelevance(List<RelevanceString> relevance){
+		return buildRelevance(relevance,Function.AND);
+	}
+	
+	public RelevanceString buildRelevance(List<RelevanceString> relevance, Function function){
 		if(relevance.size()==1)
 			return relevance.get(0);
 		List<String> relevanceStrings = new ArrayList<String>();
@@ -104,7 +128,7 @@ public class RelevanceTranslator {
 		for(int i=0; i<relevanceStrings.size(); i++){
 			String singleRelevance = relevanceStrings.get(i);
 			if(i> 0){
-				builtRelevance += " AND "+singleRelevance; 
+				builtRelevance += " "+function.name()+" "+singleRelevance; 
 				if(i<relevanceStrings.size()-1){
 					builtRelevance = "("+builtRelevance+")";
 				}
@@ -117,6 +141,9 @@ public class RelevanceTranslator {
 		newRelevance.setValue(builtRelevance);
 		return newRelevance;
 	}
+	
+	
+	
 	private Optional<Integer> getGroupID(String groupName) throws RelevanceException{
 		groupQuery.getParameter(0).setValue(groupName);
 		List<Map<String,Object>> results = client.executeQuery(groupQuery);
@@ -127,3 +154,4 @@ public class RelevanceTranslator {
 	}
 	
 }
+

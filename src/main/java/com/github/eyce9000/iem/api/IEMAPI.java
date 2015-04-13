@@ -93,7 +93,7 @@ import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter.Answer;
 import com.google.common.base.Optional;
 
 
-public class IEMClient implements RelevanceClient{
+public class IEMAPI implements RelevanceAPI{
 	private URI baseURI;
 	private Client client;
 	private HttpBasicAuthFilter authFilter;
@@ -104,7 +104,7 @@ public class IEMClient implements RelevanceClient{
 	HttpClient apacheHttpClient;
 	private Unmarshaller	besUnmarshaller;
 	
-	protected IEMClient(){}
+	protected IEMAPI(){}
 	
 	/**
 	 * 
@@ -113,28 +113,28 @@ public class IEMClient implements RelevanceClient{
 	 * @param password The IEM Console password to connect with.
 	 * @throws Exception
 	 */
-	public IEMClient(String hostname, String username, String password) throws Exception{
+	public IEMAPI(String hostname, String username, String password) throws Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build()
 			,hostname
 			,username
 			,password);
 	}
 
-	public IEMClient(URI uri, String username, String password) throws Exception{
+	public IEMAPI(URI uri, String username, String password) throws Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build()
 			,uri
 			,username
 			,password);
 	}
 	
-	public IEMClient(Client client, String hostname, String username, String password) throws JAXBException{
+	public IEMAPI(Client client, String hostname, String username, String password) throws JAXBException{
 		this(client
 				,UriBuilder.fromPath("/").scheme("https").host(hostname).port(52311).build()
 				,username
 				,password);
 	}
 	
-	public IEMClient(Client client, URI uri, String username, String password) throws JAXBException{
+	public IEMAPI(Client client, URI uri, String username, String password) throws JAXBException{
 		this.client = client;
 		this.baseURI = uri;
 

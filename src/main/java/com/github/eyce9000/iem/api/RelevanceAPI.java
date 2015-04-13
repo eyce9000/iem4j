@@ -9,7 +9,7 @@ import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
 import com.github.eyce9000.iem.api.relevance.handlers.HandlerException;
 import com.github.eyce9000.iem.api.relevance.handlers.RawResultHandler;
 
-public interface RelevanceClient {
+public interface RelevanceAPI {
 	public List<Map<String,Object>> executeQuery(SessionRelevanceQuery srq) throws RelevanceException;
 	
 	public void executeQueryWithHandler(SessionRelevanceQuery srq, RawResultHandler handler) throws RelevanceException, HandlerException;

@@ -12,9 +12,11 @@ import org.slf4j.LoggerFactory;
 import com.bigfix.schemas.bes.Baseline;
 import com.bigfix.schemas.bes.Baseline.BaselineComponentCollection.BaselineComponentGroup;
 import com.bigfix.schemas.bes.Baseline.BaselineComponentCollection.BaselineComponentGroup.BaselineComponent;
+import com.bigfix.schemas.bes.ActionSuccessCriteria;
 import com.bigfix.schemas.bes.FixletAction;
 import com.bigfix.schemas.bes.FixletWithActions;
-import com.github.eyce9000.iem.api.IEMClient;
+import com.bigfix.schemas.bes.Task;
+import com.github.eyce9000.iem.api.IEMAPI;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
@@ -25,9 +27,9 @@ public class BaselineSynchronizer {
 	
 	private SessionRelevanceQuery fixletQuery,groupQuery;
 	private RelevanceTranslator translator;
-	private IEMClient client;
+	private IEMAPI client;
 	
-	public BaselineSynchronizer(IEMClient client){
+	public BaselineSynchronizer(IEMAPI client){
 		this.client = client;
 		fixletQuery = SessionRelevanceBuilder
 				.fromRelevance("(name of site of it,tag of site of it, id of it) of bes fixlets whose (id of it = ${fixletId})")
@@ -68,7 +70,15 @@ public class BaselineSynchronizer {
 		
 		FixletAction action = foundActionHolder.get();
 		component.setActionScript(action.getActionScript());
-		component.setSuccessCriteria(action.getSuccessCriteria());
+		ActionSuccessCriteria criteria = action.getSuccessCriteria();
+		if(criteria==null){
+			criteria = new ActionSuccessCriteria();
+			if(fixlet instanceof Task)
+				criteria.setOption("RunToCompletion");
+			else 
+				criteria.setOption("OriginalRelevance");
+		}
+		component.setSuccessCriteria(criteria);
 		component.setRelevance(translator.buildRelevance(fixlet));
 		log.debug(component.getRelevance().getValue());
 	}

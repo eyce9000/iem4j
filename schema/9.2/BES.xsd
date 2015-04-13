@@ -410,7 +410,11 @@
     <xs:attribute name="JoinByIntersection" type="xs:boolean" />
   </xs:complexType>
   
-  <xs:complexType name="SearchComponent"></xs:complexType>
+  <xs:complexType name="SearchComponent">
+     <xs:sequence>
+       <xs:element name="Relevance" type="RelevanceString" />
+     </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="SearchComponentRelevance">
     <xs:complexContent>

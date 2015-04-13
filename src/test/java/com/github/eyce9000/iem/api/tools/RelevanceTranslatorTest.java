@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.bigfix.schemas.bes.RelevanceString;
-import com.github.eyce9000.iem.api.IEMClient;
+import com.github.eyce9000.iem.api.IEMAPI;
 
 public class RelevanceTranslatorTest {
 

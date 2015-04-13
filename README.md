@@ -38,7 +38,7 @@ Then add this dependency:
 ###Reading, Creating and Uploading Fixlets###
 You can upload and download ActionFixlets, Tasks, Analyses and Baselines. All of the objects conform to the BES.xml schema, so they can be serialized and deserialized using JAXB from your existing .bes files. 
 ```java
-IEMClient client = new IEMClient("hostname","username","password");
+IEMAPI client = new IEMAPI("hostname","username","password");
 
 //Reading Fixlets
 Fixlet patchFixlet1 = client.getFixlet("custom","Patching",1);
@@ -99,14 +99,14 @@ SessionRelevanceQuery query = SessionRelevanceBuilder
     .addColumns("computerName","computerId")
     .build();
  
-RelevanceClient client = new IEMClient(
+RelevanceAPI client = new IEMAPI(
     "hostname",
     "consoleUsername",
     "consolePassword");
 List<Map<String,Object>> restResults = client.executeQuery(query);
 
 //Run Relevance Query through Webreports API
-RelevanceClient relevanceClient = new WebreportsClient(
+RelevanceAPI relevanceClient = new WebreportsClient(
    "hostname",
    "webreportsUsername",
    "webreportsPassword");

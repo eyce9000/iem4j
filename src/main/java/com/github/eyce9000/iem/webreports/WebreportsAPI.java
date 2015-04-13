@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.bigfix.schemas.relevance.ResultList;
 import com.bigfix.schemas.relevance.StructuredRelevanceResult;
 import com.github.eyce9000.iem.api.ClientBuilderWrapper;
-import com.github.eyce9000.iem.api.RelevanceClient;
+import com.github.eyce9000.iem.api.RelevanceAPI;
 import com.github.eyce9000.iem.api.relevance.DataType;
 import com.github.eyce9000.iem.api.relevance.QueryResultColumn;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
@@ -36,26 +36,26 @@ import com.github.eyce9000.iem.api.relevance.handlers.impl.TypedResultListHandle
 import com.github.eyce9000.iem.webreports.relevance.Envelope;
 import com.github.eyce9000.iem.webreports.relevance.RequestBuilder;
 
-public class WebreportsClient implements RelevanceClient{
+public class WebreportsAPI implements RelevanceAPI{
 	private String password;
 	private String username;
 	private WebTarget apiRoot;
 	private URI	uriBase;
 	private TokenHolder tokenHolder = new TimedTokenHolder();
 
-	public WebreportsClient(URI uri, String username, String password) throws JAXBException, Exception{
+	public WebreportsAPI(URI uri, String username, String password) throws JAXBException, Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build(),uri,username,password);
 	}
 	
-	public WebreportsClient(String host,String username, String password) throws IllegalArgumentException, UriBuilderException, Exception{
+	public WebreportsAPI(String host,String username, String password) throws IllegalArgumentException, UriBuilderException, Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build(),host,username,password);
 	}
 	
-	public WebreportsClient(Client client, String host, String username, String password) throws IllegalArgumentException, UriBuilderException, JAXBException {
+	public WebreportsAPI(Client client, String host, String username, String password) throws IllegalArgumentException, UriBuilderException, JAXBException {
 		this(client,UriBuilder.fromPath("/soap").host(host).scheme("http").port(80).build(),username,password);	
 	}
 	
-	public WebreportsClient(Client client, URI uri, String username, String password) throws JAXBException{
+	public WebreportsAPI(Client client, URI uri, String username, String password) throws JAXBException{
 		this.uriBase = uri;
 		this.username = username;
 		this.password = password;
