@@ -212,18 +212,7 @@
                 </xs:restriction>
               </xs:simpleType>
             </xs:element>
-            <xs:element name="CustomGroup" minOccurs="0">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:choice maxOccurs="unbounded">
-							      <xs:element name="SearchComponentRelevance" type="SearchComponentRelevance" />
-							      <xs:element name="SearchComponentPropertyReference" type="SearchComponentPropertyReference" />
-							      <xs:element name="SearchComponentGroupReference" type="SearchComponentGroupReference" />
-							    </xs:choice>
-                </xs:sequence>
-                <xs:attribute name="JoinByIntersection" type="xs:boolean" />
-              </xs:complexType>
-            </xs:element>
+            <xs:element name="CustomGroup" minOccurs="0" type="GroupRelevance"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -429,19 +418,19 @@
         <xs:sequence>
           <xs:element name="Relevance" type="RelevanceString" />
         </xs:sequence>
-        <xs:attribute name="Comparison">
-          <xs:simpleType>
-            <xs:restriction base="xs:normalizedString">
-              <xs:enumeration value="IsTrue" />
-              <xs:enumeration value="IsFalse" />
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
+        <xs:attribute name="Comparison" type="TrueFalseComparison"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:simpleType name="ComparisonType">
+  <xs:simpleType name="TrueFalseComparison">
+    <xs:restriction base="xs:normalizedString">
+      <xs:enumeration value="IsTrue" />
+      <xs:enumeration value="IsFalse" />
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="Comparison">
     <xs:restriction base="xs:normalizedString">
       <xs:enumeration value="Contains" />
       <xs:enumeration value="DoesNotContain" />
@@ -458,12 +447,12 @@
           <xs:element name="Relevance" type="RelevanceString" />
         </xs:sequence>
         <xs:attribute name="PropertyName" type="xs:normalizedString" />
-        <xs:attribute name="Comparison" type="ComparisonType" />
+        <xs:attribute name="Comparison" type="Comparison" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   
-  <xs:simpleType name="MembershipComparisonType">
+  <xs:simpleType name="MembershipComparison">
     <xs:restriction base="xs:normalizedString">
       <xs:enumeration value="IsMember" />
       <xs:enumeration value="IsNotMember" />
@@ -474,7 +463,7 @@
     <xs:complexContent>
       <xs:extension base="SearchComponent">
         <xs:attribute name="GroupName" type="xs:normalizedString" />
-        <xs:attribute name="Comparison" type="MembershipComparisonType" />
+        <xs:attribute name="Comparison" type="MembershipComparison" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
