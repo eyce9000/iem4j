@@ -17,6 +17,8 @@ import com.bigfix.schemas.bes.FixletAction;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.Task;
 import com.github.eyce9000.iem.api.IEMAPI;
+import com.github.eyce9000.iem.api.model.FixletID;
+import com.github.eyce9000.iem.api.model.SiteID;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
@@ -24,6 +26,26 @@ import com.google.common.base.Optional;
 
 public class BaselineSynchronizer {
 	Logger log = LoggerFactory.getLogger(getClass());
+
+	private static final String FIXLET_RELEVANCE = "" 
+			+"(" 
+			+ "	id of it, " 
+			+ "	name of it, " 
+			+ " url of current bes server," 
+			+ "	(if analysis flag of it then \"Analysis\" " 
+			+ "		else if task flag of it then \"Task\" "
+			+ "		else if baseline flag of it then \"Baseline\" " 
+			+ "		else \"Fixlet\") of it," + "	name of site of it,"
+			+ "	(if external site flag of site of it then \"External\" " 
+			+ "		else if master site flag of site of it then \"Master\" "
+			+ "		else if operator site flag of site of it then \"Operator\" " 
+			+ "		else \"Custom\") of it,"
+			+ " url of site of it,"
+			+ " display name of it" 
+			+ ") "
+			+ "of bes fixlets";
+
+	private static final String[] FIXLET_COLUMNS = new String[]{"id", "name","serverUrl", "type", "siteName", "siteType", "siteUrl", "displayName"};
 	
 	private SessionRelevanceQuery fixletQuery,groupQuery;
 	private RelevanceTranslator translator;
@@ -32,8 +54,8 @@ public class BaselineSynchronizer {
 	public BaselineSynchronizer(IEMAPI client){
 		this.client = client;
 		fixletQuery = SessionRelevanceBuilder
-				.fromRelevance("(name of site of it,tag of site of it, id of it) of bes fixlets whose (id of it = ${fixletId})")
-				.addColumns("siteName","siteType","fixletId")
+				.fromRelevance(FIXLET_RELEVANCE+" whose (id of it = ${fixletId} and url of site of it = \"${siteUrl}\")")
+				.addColumns(FIXLET_COLUMNS)
 				.build();
 		this.translator = new RelevanceTranslator(client);
 	}
@@ -58,9 +80,9 @@ public class BaselineSynchronizer {
 	private void updateComponent(BaselineComponent component) throws Exception{
 		BigInteger id = component.getSourceID();
 		String actionName = component.getActionName();
-		Optional<FixletWithActions> fixletHolder = findFixlet(id);
+		Optional<FixletWithActions> fixletHolder = findFixlet(id,component.getSourceSiteURL());
 		if(!fixletHolder.isPresent())
-			throw new Exception("Unable to find fixlet with id "+id.toString());
+			throw new Exception("Unable to find fixlet "+component.getSourceSiteURL()+" "+id.toString());
 		
 		FixletWithActions fixlet = fixletHolder.get();
 		
@@ -80,13 +102,15 @@ public class BaselineSynchronizer {
 		}
 		component.setSuccessCriteria(criteria);
 		component.setRelevance(translator.buildRelevance(fixlet));
-		log.debug(component.getRelevance().getValue());
+		log.trace(component.getRelevance().getValue());
 	}
 	
-	
+
 	private Optional<FixletAction> findAction(FixletWithActions fixlet, String actionName){
 		List<FixletAction> actions = new ArrayList<FixletAction>(fixlet.getAction());
-		actions.add(fixlet.getDefaultAction());
+		if(fixlet.getDefaultAction()!=null)
+			actions.add(fixlet.getDefaultAction());
+		
 		FixletAction foundAction = null;
 		for(FixletAction action: actions){
 			if(action.getID().equals(actionName))
@@ -95,24 +119,15 @@ public class BaselineSynchronizer {
 		return Optional.fromNullable(foundAction);
 	}
 	
-	private Optional<FixletWithActions> findFixlet(BigInteger id) throws MalformedURLException, RelevanceException{
+	private Optional<FixletWithActions> findFixlet(BigInteger id, String siteUrl) throws MalformedURLException, RelevanceException{
 		String idStr = id.toString();
-		fixletQuery.getParameter(0).setValue(idStr);
-		List<Map<String,Object>> results = client.executeQuery(fixletQuery);
+		fixletQuery.getParameter("fixletId").setValue(idStr);
+		fixletQuery.getParameter("siteUrl").setValue(siteUrl);
+		List<FixletID> results = client.executeQuery(fixletQuery,FixletID.class);
 		
-		String siteType = (String)results.get(0).get("siteType");
-		String siteName = (String)results.get(0).get("siteName");
+		FixletID fixletId = results.get(0);
+		SiteID siteId = fixletId.getSite();
 		
-		if(siteType.equals("actionsite")){
-			siteType = "master";
-			siteName = null;
-		}
-		else if(siteType.contains("opsite"))
-			siteType = "operator";
-		else if(siteType.contains("Custom"))
-			siteType = "custom";
-		
-		
-		return client.getFixlet(siteType,siteName,id.longValue());
+		return client.getFixlet(siteId.getType().format(),siteId.getFormattedName(),id.longValue());
 	}
 }

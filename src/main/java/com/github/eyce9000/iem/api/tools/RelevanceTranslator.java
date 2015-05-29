@@ -122,7 +122,7 @@ public class RelevanceTranslator {
 			return relevance.get(0);
 		List<String> relevanceStrings = new ArrayList<String>();
 		for(RelevanceString r : relevance){
-			relevanceStrings.add("("+r.getValue()+")");
+			relevanceStrings.add("("+r.getValue().trim()+")");
 		}
 		String builtRelevance = "";
 		for(int i=0; i<relevanceStrings.size(); i++){

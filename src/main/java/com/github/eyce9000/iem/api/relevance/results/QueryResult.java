@@ -29,7 +29,7 @@ public class QueryResult {
 	
 	@XmlPath("Query/Result/Answer")
 	@XmlJavaTypeAdapter(value=ResultAnswerAdapter.class)
-	protected Object singleResultAnswer;
+	protected List<Object> singleResultAnswer = new ArrayList<Object>();
 	
 	@XmlPath("Query/Evaluation")
 	private QueryEvaluation evaluation;
@@ -44,7 +44,7 @@ public class QueryResult {
 	public List<ResultTuple> getPluralResults() {
 		return results;
 	}
-	public Object getSingleResult(){
+	public List<Object> getSingleResults(){
 		return singleResultAnswer;
 	}
 	public QueryEvaluation getEvaluation() {

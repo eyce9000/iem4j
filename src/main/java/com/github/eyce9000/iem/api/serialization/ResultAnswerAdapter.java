@@ -1,11 +1,14 @@
 package com.github.eyce9000.iem.api.serialization;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import com.bigfix.schemas.bes.TrueFalseComparison;
 
 public class ResultAnswerAdapter extends XmlAdapter<ResultAnswerAdapter.Answer,Object>{
 	DateTimeFormatter dateFormatter =DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss Z");
@@ -19,20 +22,20 @@ public class ResultAnswerAdapter extends XmlAdapter<ResultAnswerAdapter.Answer,O
 	public Object unmarshal(Answer rawValue) throws Exception {
 		Object typed = null;
 		switch(rawValue.type){
-		case "integer":
+		case INTEGER:
 			typed = Integer.parseInt(rawValue.value);
 			break;
-		case "time":
+		case TIME:
 			typed = dateFormatter.parseDateTime(rawValue.value).toDate();
 			break;
-		case "boolean":
+		case BOOLEAN:
 			typed = Boolean.parseBoolean(rawValue.value);
 			break;
-		case "floating point":
+		case FLOATING_POINT:
 			typed = Double.parseDouble(rawValue.value);
 			break;
-		case "string":
-		case "utf8 string":
+		case STRING:
+		case UTF8_STRING:
 		default:
 			typed = rawValue.value;
 		}
@@ -41,13 +44,13 @@ public class ResultAnswerAdapter extends XmlAdapter<ResultAnswerAdapter.Answer,O
 	
 	public static class Answer{
 		@XmlAttribute(name="type")
-		private String type = "string";
+		private AnswerValueType type = AnswerValueType.STRING;
 		@XmlValue
 		private String value;
-		public String getType() {
+		public AnswerValueType getType() {
 			return type;
 		}
-		public void setType(String type) {
+		public void setType(AnswerValueType type) {
 			this.type = type;
 		}
 		public String getValue() {
@@ -56,6 +59,41 @@ public class ResultAnswerAdapter extends XmlAdapter<ResultAnswerAdapter.Answer,O
 		public void setValue(String value) {
 			this.value = value;
 		}
+		
+	}
+	
+	public static enum AnswerValueType{
+
+		@XmlEnumValue("integer")
+		INTEGER("integer"),
+		@XmlEnumValue("time")
+		TIME("time"),
+		@XmlEnumValue("boolean")
+		BOOLEAN("boolean"),
+		@XmlEnumValue("floating point")
+		FLOATING_POINT("floating point"),
+		@XmlEnumValue("string")
+		STRING("string"),
+		@XmlEnumValue("utf8 string")
+		UTF8_STRING("utf8 string");
+	    private final String value;
+	    
+	    AnswerValueType(String value){
+	    	this.value = value;
+	    }
+	    
+	    public String value() {
+	        return value;
+	    }
+
+	    public static AnswerValueType fromValue(String v) {
+	        for (AnswerValueType c: AnswerValueType.values()) {
+	            if (c.value.equals(v)) {
+	                return c;
+	            }
+	        }
+	        throw new IllegalArgumentException(v);
+	    }
 		
 	}
 

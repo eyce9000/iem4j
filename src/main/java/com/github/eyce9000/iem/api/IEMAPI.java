@@ -1,11 +1,16 @@
 package com.github.eyce9000.iem.api;
 
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -15,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +48,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -63,6 +70,7 @@ import com.bigfix.schemas.bes.Analysis;
 import com.bigfix.schemas.bes.BES;
 import com.bigfix.schemas.bes.BES.CustomSite;
 import com.bigfix.schemas.bes.Baseline;
+import com.bigfix.schemas.bes.Fixlet;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.SingleAction;
 import com.bigfix.schemas.bes.Site;
@@ -78,10 +86,16 @@ import com.github.eyce9000.iem.api.actions.ActionBuilder;
 import com.github.eyce9000.iem.api.actions.ActionTargetBuilder;
 import com.github.eyce9000.iem.api.actions.logger.ActionLogger;
 import com.github.eyce9000.iem.api.actions.script.ActionScriptBuilder;
+import com.github.eyce9000.iem.api.impl.AbstractIEMAPI;
+import com.github.eyce9000.iem.api.model.ActionID;
+import com.github.eyce9000.iem.api.model.FixletID;
+import com.github.eyce9000.iem.api.model.SiteID;
+import com.github.eyce9000.iem.api.model.FixletID.ResourceType;
 import com.github.eyce9000.iem.api.relevance.DataType;
 import com.github.eyce9000.iem.api.relevance.QueryResultColumn;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.RowSerializer;
+import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
 import com.github.eyce9000.iem.api.relevance.handlers.HandlerException;
 import com.github.eyce9000.iem.api.relevance.handlers.RawResultHandler;
@@ -93,7 +107,7 @@ import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter.Answer;
 import com.google.common.base.Optional;
 
 
-public class IEMAPI implements RelevanceAPI{
+public class IEMAPI extends AbstractIEMAPI {
 	private URI baseURI;
 	private Client client;
 	private HttpBasicAuthFilter authFilter;
@@ -101,8 +115,7 @@ public class IEMAPI implements RelevanceAPI{
 	private Unmarshaller queryUnmarshaller;
 	private String username;
 	private Set<ActionLogger> actionLoggers = new HashSet<ActionLogger>();
-	HttpClient apacheHttpClient;
-	private Unmarshaller	besUnmarshaller;
+	protected HttpClient apacheHttpClient;
 	
 	protected IEMAPI(){}
 	
@@ -593,6 +606,35 @@ public class IEMAPI implements RelevanceAPI{
 		return outputFile;
 	}
 	
+	public void deleteFile(String siteType, String site, SiteFile siteFile){
+		deleteFile(siteType,site,siteFile.getID());
+	}
+	
+	public void deleteFile(String siteType, String site, BigInteger fileId){
+		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),siteType,site).path("/file/{fileid}").resolveTemplate("fileid", fileId.toString());
+		Response resp = target.request().delete();
+	}
+
+	public List<BESAPI.SiteFile> updateFile(String siteType, String site, SiteFile siteFile, File file){
+		return updateFile(siteType,site,siteFile.getID(),file);
+	}
+	
+	public List<BESAPI.SiteFile> updateFile(String siteType, String site, BigInteger fileId, File file){
+		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),siteType,site).path("/file/{fileid}").resolveTemplate("fileid", fileId.toString());
+		
+	    HttpPut httpPut = new HttpPut(target.getUri());
+	    MultipartEntity reqEntity = new MultipartEntity();
+	    	FileBody uploadFilePart = new FileBody(file);
+	    	reqEntity.addPart("file", uploadFilePart);
+	    httpPut.setEntity(reqEntity);
+	    try {
+			HttpResponse response = apacheHttpClient.execute(httpPut);
+			return getBESAPIContent(response,BESAPI.SiteFile.class);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public List<BESAPI.SiteFile> createFiles(String siteType, String site, File... files){
 		WebTarget target = buildSiteTarget(apiRoot.path("/site/"),siteType,site).path("/files");
 		
@@ -610,15 +652,15 @@ public class IEMAPI implements RelevanceAPI{
 			throw new RuntimeException(e);
 		}
 	}
+
+	//*******************************************************************
+	// O P E R A T O R S
+	//*******************************************************************
 	
 	//*******************************************************************
 	// D A S H B O A R D
 	//*******************************************************************
 	
-	//TODO IMPLEMENT
-	public BESAPI getDashoardVariables(){
-		return null;
-	}
 	
 	//*******************************************************************
 	// R E S P O N S E  /  G E T  M E T H O D S
@@ -628,154 +670,25 @@ public class IEMAPI implements RelevanceAPI{
 		return root.path(path).request().get(String.class);
 	}
 	
-	protected <T> Optional<T> getSingleBESContent(Response resp, Class<T> clazz){
-		if(resp.getStatus()==404)
-			return Optional.absent();
-		List<T> list = getBESContent(resp,clazz);
-		if(list.isEmpty())
-			return Optional.absent();
-		else
-			return Optional.of(list.get(0));
+	public Response get(String path){
+		return root.path(path).request().get();
 	}
-	
-	protected <T> Optional<T> getSingleBESContent(HttpResponse resp, Class<T> clazz){
-		if(resp.getStatusLine().getStatusCode()==404)
-			return Optional.absent();
-		List<T> list = getBESContent(resp,clazz);
-		if(list.isEmpty())
-			return Optional.absent();
-		else
-			return Optional.of(list.get(0));
+	public Response delete(String path){
+		return root.path(path).request().delete();
 	}
-	
-	protected <T> List<T> getBESContent(BES bes){
-		List<T> values = new ArrayList<T>();
-		for(Object object : bes.getFixletOrTaskOrAnalysis()){
-			values.add((T)object);
-		}
-		return values;
+	public Response post(String path,BESAPI besapi){
+		Entity<BESAPI> entity = Entity.entity(besapi, MediaType.APPLICATION_XML);
+		return root.path(path).request().post(entity);
 	}
-	
-	protected <T> List<T> getBESContent(Response resp, Class<T> clazz){
-		BES bes = handleResponse(resp,BES.class);
-		return getBESContent(bes);
-	}
-	protected <T> List<T> getBESContent(HttpResponse resp, Class<T> clazz){
-		BES bes = handleResponse(resp,BES.class);
-		return getBESContent(bes);
-	}
-
-	protected <T> Optional<T> getSingleBESAPIContent(Response resp, Class<T> clazz){
-		if(resp.getStatus()==404)
-			return Optional.absent();
-		List<T> list = getBESAPIContent(resp,clazz);
-		if(list.isEmpty())
-			return Optional.absent();
-		else
-			return Optional.of(list.get(0));
-	}
-	
-
-	protected <T> Optional<T> getSingleBESAPIContent(HttpResponse resp, Class<T> clazz){
-		if(resp.getStatusLine().getStatusCode()==404)
-			return Optional.absent();
-		List<T> list = getBESAPIContent(resp,clazz);
-		if(list.isEmpty())
-			return Optional.absent();
-		else
-			return Optional.of(list.get(0));
-	}
-	
-	protected <T> List<T> getBESAPIContent(Response resp, Class<T> clazz){
-		BESAPI besapi = handleResponse(resp,BESAPI.class);
-		return getBESAPIContent(besapi);
-	}
-	
-	protected <T> List<T> getBESAPIContent(HttpResponse resp, Class<T> clazz){
-		BESAPI besapi = handleResponse(resp,BESAPI.class);
-		return getBESAPIContent(besapi);
-	}
-
-	protected <T> List<T> getBESAPIContent(BESAPI besapi) {
-		List<T> values = new ArrayList<T>();
-		for(JAXBElement<?> wrapper : besapi.getFixletOrReplicationServerOrReplicationLink()){
-			values.add((T)wrapper.getValue());
-		}
-		return values;
-	}
-	
-	protected <T> void putBESContent(WebTarget target,T value,Class<T> clazz){
-		BES bes = new BES();
-		bes.getFixletOrTaskOrAnalysis()
-			.add(value);
-
+	public Response post(String path,BES bes){
 		Entity<BES> entity = Entity.entity(bes, MediaType.APPLICATION_XML);
-		Response response = target.request().put(entity);
-		handleResponse(response,String.class);
+		return root.path(path).request().post(entity);
 	}
-
-	protected <T> Response postBESContent(WebTarget target,T value){
-		BES bes = new BES();
-		bes.getFixletOrTaskOrAnalysis()
-			.add(value);
-
+	public Response put(String path,BES bes){
 		Entity<BES> entity = Entity.entity(bes, MediaType.APPLICATION_XML);
-		return target.request().post(entity);
+		return root.path(path).request().put(entity);
 	}
 	
-	protected <T> T handleResponse(Response resp,Class<T> clazz){
-		if(resp.getStatus()>=200 && resp.getStatus()<300){
-			return resp.readEntity(clazz);
-		}
-		else{
-			try{
-				String error = "";
-				BufferedReader reader = new BufferedReader(new InputStreamReader((InputStream)resp.getEntity()));
-				String line = null;
-				while((line=reader.readLine())!=null)
-					error += line +"\n";
-				throw new BadRequestException(resp.getStatus()+": "+error);
-			}
-			catch(Exception ex){
-				throw new BadRequestException(ex);
-			}
-		}
-	}
-	
-
-	protected <T> T handleResponse(HttpResponse resp,Class<T> clazz){
-		int code =resp.getStatusLine().getStatusCode(); 
-		if(code>=200 && code<300){
-			try {
-				return (T)besUnmarshaller.unmarshal(resp.getEntity().getContent());
-			} catch (Exception e) {
-				throw new BadRequestException(e);
-			}
-		}
-		else{
-			try{
-				String error = "";
-				BufferedReader reader = new BufferedReader(new InputStreamReader(resp.getEntity().getContent()));
-				String line = null;
-				while((line=reader.readLine())!=null)
-					error += line +"\n";
-				throw new BadRequestException(code+": "+error);
-			}
-			catch(Exception ex){
-				throw new BadRequestException(ex);
-			}
-		}
-	}
-	
-	protected WebTarget buildSiteTarget(WebTarget base, String siteType, String site){
-		WebTarget target;
-		target = base.path("{siteType}")
-				.resolveTemplate("siteType", siteType);
-		if(site!=null){
-			target = target.path("/{site}").resolveTemplate("site", site);
-		}
-		return target;
-	}
 	
 	//*******************************************************************
 	// R E L E V A N C E   M E T H O D S
@@ -816,6 +729,7 @@ public class IEMAPI implements RelevanceAPI{
 		return handler.getResults();
 	}
 	
+
 	private QueryResult runRelevanceQuery(String query){
 		WebTarget target = apiRoot.path("query");
 		try {
@@ -826,79 +740,5 @@ public class IEMAPI implements RelevanceAPI{
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-	
-
-	private void processResponse(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException, RelevanceException{
-		if(result.getError()!=null){
-			throw new RelevanceException(result);
-		}
-		
-		switch(result.getEvaluation().getPlurality()){
-			case Plural:
-				processPluralResult(result,srq,handler);
-				break;
-			case Singular:
-				processSingleResult(result,srq,handler);
-				break;
-			default:
-				break;
-		}
-		handler.onComplete(result.getEvaluation().getTime().getMillis());
-	}
-	
-	private void processSingleResult(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException{
-		List<Object> firstRow = Arrays.asList(result.getSingleResult());
-		List<QueryResultColumn> columns = buildColumns(firstRow,srq);
-		handleRow(firstRow,columns,handler);
-	}
-	
-	private void processPluralResult(QueryResult result, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException{
-		if(result.getPluralResults().isEmpty()){
-			return;
-		}
-		
-		List<Object> firstRow = result.getPluralResults().get(0).getAnswers();
-		List<QueryResultColumn> columns = buildColumns(firstRow,srq);
-		for(ResultTuple row : result.getPluralResults()){
-			
-			List<Object> rowData = row.getAnswers();
-			handleRow(rowData,columns,handler);
-		}
-	}
-	
-	
-	private void handleRow(List<Object> rowData, List<QueryResultColumn> columns,RawResultHandler handler) throws HandlerException{
-		HashMap<String,Object> sampleRowValues = new HashMap<String,Object>();
-    	for(int colNum=0; colNum<columns.size(); colNum++){
-    		QueryResultColumn column = columns.get(colNum);
-			sampleRowValues.put(column.getName(),rowData.get(colNum));
-    	}
-    	try{
-    		handler.onResult(sampleRowValues);
-    	}
-    	catch(Exception ex){
-    		throw new HandlerException(ex);
-    	}
-	}
-	
-	private List<QueryResultColumn> buildColumns(List<Object> hintRow,SessionRelevanceQuery srq){
-		List<QueryResultColumn> columns = srq.getColumns();
-		int diff = hintRow.size() - columns.size();
-    	if(diff > 0){
-    		List<QueryResultColumn> newColumns = new ArrayList<QueryResultColumn>(columns);
-    		for(int i=0; i<hintRow.size(); i++){
-    			if(i>=columns.size()){
-    				newColumns.add(new QueryResultColumn("col"+i,DataType.string));
-    			}
-    		}
-    		columns = newColumns;
-    	}
-    	else if (diff < 0){
-    		while(columns.size() > hintRow.size()){
-        		columns.remove(columns.size()-1);
-    		}
-    	}
-    	return columns;
 	}
 }

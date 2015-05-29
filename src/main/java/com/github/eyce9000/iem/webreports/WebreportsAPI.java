@@ -15,7 +15,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.joda.time.DateTime;
@@ -33,6 +36,7 @@ import com.github.eyce9000.iem.api.relevance.handlers.HandlerException;
 import com.github.eyce9000.iem.api.relevance.handlers.RawResultHandler;
 import com.github.eyce9000.iem.api.relevance.handlers.impl.RawResultHandlerDefault;
 import com.github.eyce9000.iem.api.relevance.handlers.impl.TypedResultListHandler;
+import com.github.eyce9000.iem.api.serialization.BESContextProvider;
 import com.github.eyce9000.iem.webreports.relevance.Envelope;
 import com.github.eyce9000.iem.webreports.relevance.RequestBuilder;
 
@@ -42,6 +46,8 @@ public class WebreportsAPI implements RelevanceAPI{
 	private WebTarget apiRoot;
 	private URI	uriBase;
 	private TokenHolder tokenHolder = new TimedTokenHolder();
+	private Marshaller	marshaller;
+	private Unmarshaller	unmarshaller;
 
 	public WebreportsAPI(URI uri, String username, String password) throws JAXBException, Exception{
 		this(ClientBuilderWrapper.defaultBuilder().build(),uri,username,password);
@@ -59,7 +65,10 @@ public class WebreportsAPI implements RelevanceAPI{
 		this.uriBase = uri;
 		this.username = username;
 		this.password = password;
-	    
+
+		JAXBContext context = JAXBContext.newInstance(Envelope.class);
+		unmarshaller = context.createUnmarshaller();
+		marshaller = context.createMarshaller();
         apiRoot = client.target(UriBuilder.fromUri(uriBase));
 	}
 	
