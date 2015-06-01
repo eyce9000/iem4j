@@ -78,7 +78,7 @@ SingleAction action = SingleActionBuilder.singleAction()
 action.setTarget(ActionTargetBuilder.targetComputers(computerIds));
 
 //Start the action
-BESAPI.Action actionReference = client.createAction(action);
+BESAPI.Action actionReference = client.createFixletSourcedAction(action);
 
 //Check the action status
 BESAPI.ActionResults actionResults = client.getActionStatus(actionReference);
