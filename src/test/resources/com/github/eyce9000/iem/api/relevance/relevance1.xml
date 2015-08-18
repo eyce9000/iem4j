@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BESAPI xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BESAPI.xsd">
+	<Query Resource="(name of it, id of it) of bes computers whose (name of it as lowercase contains &quot;bigfix&quot;)">
+		<Result>
+			<Tuple>
+				<Answer type="string">BIGFIXSRV</Answer>
+				<Answer type="integer">2027482</Answer>
+			</Tuple>
+			<Tuple>
+				<Answer type="string">BIGFIXW7</Answer>
+				<Answer type="integer">6119757</Answer>
+			</Tuple>
+			<Tuple>
+				<Answer type="string">BIGFIX1</Answer>
+				<Answer type="integer">10883548</Answer>
+			</Tuple>
+			<Tuple>
+				<Answer type="string">SFBIGFIXDC01</Answer>
+				<Answer type="integer">11175538</Answer>
+			</Tuple>
+			<Tuple>
+				<Answer type="string">BIGFIX8</Answer>
+				<Answer type="integer">16437965</Answer>
+			</Tuple>
+		</Result>
+		<Evaluation>
+			<Time>118.588ms</Time>
+			<Plurality>Plural</Plurality>
+		</Evaluation>
+	</Query>
+</BESAPI>

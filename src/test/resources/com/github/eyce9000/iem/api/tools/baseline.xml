@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Baseline>
+		<Title>Baseline Test</Title>
+		<Description><![CDATA[&lt;enter a description of the baseline here&gt; ]]></Description>
+		<Relevance>true</Relevance>
+		<Category></Category>
+		<Source>Internal</Source>
+		<SourceID></SourceID>
+		<SourceReleaseDate>2015-04-13</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 17 Jun 2015 19:01:33 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<BaselineComponentCollection>
+			<BaselineComponentGroup>
+				<BaselineComponent Name="Relevance Test" IncludeInRelevance="true" SourceSiteURL="http://server:52311/cgi-bin/bfgather.exe/actionsite" SourceID="22427" ActionName="Action1">
+					<ActionScript MIMEType="application/x-Fixlet-Windows-Shell">// Enter your action script here
+setting "test" = "Action1 Ran!" on "{now}" for client</ActionScript>
+					<SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+					<Relevance><![CDATA[(version of client >= "6.0.0.0") AND ((exists true whose (if true then (exists (computer name) whose (it as string as lowercase contains "nc" as lowercase)) else false)) OR (exists true whose (if true then (not exists (computer name) whose (it as string as lowercase contains "90" as lowercase)) else false)) OR (exists true whose (if true then (member of group 2616 of site "actionsite") else false)) OR (not (exists true whose (if true then (member of group 1109 of site "actionsite") else false))) OR (exists true whose (if true then (name of computer contains "nc") else false)) OR (not (exists true whose (if true then (name of computer contains "90") else false))))]]></Relevance>
+				</BaselineComponent>
+				<BaselineComponent Name="Task Test" IncludeInRelevance="false" SourceSiteURL="http://server:52311/cgi-bin/bfgather.exe/actionsite" SourceID="22429" ActionName="Action1">
+					<ActionScript MIMEType="application/x-Fixlet-Windows-Shell">// Enter your action script here
+setting "test" = "Task Action1 Ran!" on "{now}" for client</ActionScript>
+					<SuccessCriteria Option="CustomRelevance">computer name = "something"</SuccessCriteria>
+					<Relevance>true</Relevance>
+				</BaselineComponent>
+			</BaselineComponentGroup>
+			<BaselineComponentGroup>
+				<BaselineComponent Name="Restart Computer" IncludeInRelevance="true" SourceSiteURL="http://server:52311/cgi-bin/bfgather.exe/actionsite" SourceID="32559" ActionName="Action1">
+					<ActionScript MIMEType="application/x-Fixlet-Windows-Shell">restart 180</ActionScript>
+					<SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+					<Relevance><![CDATA[(version of client >= "6.0.0.0") AND (exists true whose (if true then (( ( (exists true whose (if true then (member of group 32604 of site "actionsite") else false)) or (exists true whose (if true then (member of group 32607 of site "actionsite") else false)) or (exists true whose (if true then (member of group 32606 of site "actionsite") else false)) ) AND (exists true whose (if true then (pending restart) else false)) )) else false))]]></Relevance>
+				</BaselineComponent>
+			</BaselineComponentGroup>
+		</BaselineComponentCollection>
+	</Baseline>
+</BES>

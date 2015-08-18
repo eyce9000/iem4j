@@ -1,0 +1,8 @@
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+   <env:Body>
+      <env:Fault>
+         <faultcode>env:Client</faultcode>
+         <faultstring xml:lang="ENU">Invalid username or password.</faultstring>
+      </env:Fault>
+   </env:Body>
+</env:Envelope>

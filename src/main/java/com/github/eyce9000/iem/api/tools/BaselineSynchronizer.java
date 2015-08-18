@@ -54,7 +54,7 @@ public class BaselineSynchronizer {
 	public BaselineSynchronizer(IEMAPI client){
 		this.client = client;
 		fixletQuery = SessionRelevanceBuilder
-				.fromRelevance(FIXLET_RELEVANCE+" whose (id of it = ${fixletId} and url of site of it = \"${siteUrl}\")")
+				.fromRelevance(FIXLET_RELEVANCE+" whose (id of it = ${fixletId} and (url of site of it = \"${siteUrl}\" or url of bes site whose(master site flag of it = true) = \"${siteUrl}\"))")
 				.addColumns(FIXLET_COLUMNS)
 				.build();
 		this.translator = new RelevanceTranslator(client);
@@ -119,11 +119,14 @@ public class BaselineSynchronizer {
 		return Optional.fromNullable(foundAction);
 	}
 	
-	private Optional<FixletWithActions> findFixlet(BigInteger id, String siteUrl) throws MalformedURLException, RelevanceException{
+	private Optional<FixletWithActions> findFixlet(BigInteger id, String siteUrl) throws Exception{
 		String idStr = id.toString();
 		fixletQuery.getParameter("fixletId").setValue(idStr);
 		fixletQuery.getParameter("siteUrl").setValue(siteUrl);
 		List<FixletID> results = client.executeQuery(fixletQuery,FixletID.class);
+		
+		if(results.size()==0)
+			throw new Exception("Unable to find fixlet "+siteUrl+" "+idStr);
 		
 		FixletID fixletId = results.get(0);
 		SiteID siteId = fixletId.getSite();

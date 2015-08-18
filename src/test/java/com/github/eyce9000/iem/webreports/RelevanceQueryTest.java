@@ -1,4 +1,4 @@
-package com.github.eyce9000.iem.api.webreports;
+package com.github.eyce9000.iem.webreports;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.client.Client;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -19,6 +20,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.eyce9000.iem.api.ClientBuilderWrapper;
 import com.github.eyce9000.iem.api.ConnectionDoc;
 import com.github.eyce9000.iem.api.IEMAPI;
 import com.github.eyce9000.iem.api.RelevanceAPI;
@@ -47,16 +49,15 @@ public class RelevanceQueryTest {
 			webreportsDoc = (ConnectionDoc)unmarshaller.unmarshal(new File("config/test-webreports.xml"));
 			restapiDoc = (ConnectionDoc)unmarshaller.unmarshal(new File("config/test-restapi.xml"));
 		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
 	@Before
 	public void setUp() throws Exception {
-		
-		temClient = new IEMAPI(restapiDoc.host,restapiDoc.username,restapiDoc.password);
-		webreportsClient = new WebreportsAPI(webreportsDoc.host,webreportsDoc.username,webreportsDoc.password);
+		Client jaxrsclient = ClientBuilderWrapper.defaultBuilder().enableLogging().build();
+		temClient = new IEMAPI(jaxrsclient,restapiDoc.host,restapiDoc.username,restapiDoc.password);
+		webreportsClient = new WebreportsAPI(jaxrsclient,webreportsDoc.host,webreportsDoc.username,webreportsDoc.password);
 	}
 
 	@Test

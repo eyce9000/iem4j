@@ -19,11 +19,16 @@ public class SourcedFixletActionBuilder {
 	}
 	
 	public static SourcedFixletActionBuilder start(String siteName, BigInteger fixletId){
+		return start(siteName,fixletId,"Action1");
+	}
+	
+	public static SourcedFixletActionBuilder start(String siteName, BigInteger fixletId,String actionName){
 		SourcedFixletActionBuilder builder = new SourcedFixletActionBuilder();
 		
 		BESActionSourceFixlet sourceFixlet = new BESActionSourceFixlet();
 		sourceFixlet.setSitename(siteName);
 		sourceFixlet.setFixletID(fixletId);
+		sourceFixlet.setAction(actionName);
 		builder.action.setSourceFixlet(sourceFixlet);
 		
 		return builder;

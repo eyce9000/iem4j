@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.eyce9000</groupId>
 	<artifactId>iem4j-client</artifactId>
-	<version>1.2.2</version>
+	<version>1.3.5</version>
 	<name>IEM Client</name>
 	<scm>
 		<connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
@@ -88,11 +88,23 @@
 			<version>1.7.2</version>
 			<scope>test</scope>
 		</dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>hamcrest-core</artifactId>
+					<groupId>org.hamcrest</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 	<url>https://github.com/eyce9000/iem4j</url>
@@ -131,6 +143,7 @@
 							<sourceRoot>${project.build.directory}/generated-sources/java/</sourceRoot>
 							<xsdOptions>
 								<xsdOption>
+                  <extension>true</extension>
 									<xsd>${basedir}/src/main/resources/BES.xsd</xsd>
 									<bindingFile>${basedir}/src/main/resources/BES.xjb</bindingFile>
 									<extensionArgs>
@@ -138,6 +151,7 @@
 									</extensionArgs>
 								</xsdOption>
 								<xsdOption>
+								  <extension>true</extension>
 									<xsd>${basedir}/src/main/resources/BESAPI.xsd</xsd>
 									<bindingFile>${basedir}/src/main/resources/BESAPI.xjb</bindingFile>
 									<extensionArgs>

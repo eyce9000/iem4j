@@ -1,6 +1,7 @@
 package com.github.eyce9000.iem.api.relevance.results;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.joda.time.Period;
@@ -8,6 +9,7 @@ import org.joda.time.Period;
 import com.github.eyce9000.iem.api.serialization.XmlPeriodAdapter;
 
 
+@XmlRootElement(name="Evaluation")
 public class QueryEvaluation {
 	public static enum Plurality{Plural,Singular,None}
 	

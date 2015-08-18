@@ -10,9 +10,10 @@ import com.bigfix.schemas.besapi.BESAPI.ComputerSettings;
 import com.bigfix.schemas.besapi.ComputerSetting;
 
 public class ActionScriptBuilder {
+	private String mimeType = null;
 	List<String> actionScriptLines = new LinkedList<String>();
 	public ActionScript build(){
-		return build(null);
+		return build(mimeType);
 	}
 	public ActionScript build(String mimeType){
 
@@ -90,6 +91,10 @@ public class ActionScriptBuilder {
 		for(String line:lines)
 			line(prefix+line);
 		return this;
+	}
+	
+	public ActionScriptBuilder lines(ActionScript script){
+		return lines(script.getValue().split("\n"));
 	}
 	
 	/**
@@ -222,6 +227,13 @@ public class ActionScriptBuilder {
 	
 	public static ActionScriptBuilder start(){
 		ActionScriptBuilder builder = new ActionScriptBuilder();
+		return builder;
+	}
+	
+	public static ActionScriptBuilder start(ActionScript base){
+		ActionScriptBuilder builder = new ActionScriptBuilder();
+		builder.lines(base.getValue().split("\n"));
+		builder.mimeType = base.getMIMEType();
 		return builder;
 	}
 }

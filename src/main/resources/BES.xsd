@@ -121,29 +121,31 @@
   </xs:complexType>
 
   <xs:complexType name="MultipleActionGroup">
-    <xs:sequence>
-      <xs:element name="Title" type="ObjectName" minOccurs="0" />
-      <xs:element name="Relevance" type="RelevanceString" minOccurs="0" />
-      <xs:element name="PreGroupActionScript" type="ActionScript" minOccurs="0" />
-      <xs:element name="MemberAction" minOccurs="0" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="Action">
-              <xs:sequence>
-                <xs:element name="IncludeInGroupRelevance" type="xs:boolean" minOccurs="0" />
-              </xs:sequence>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="PostGroupActionScript" type="ActionScript" minOccurs="0" />
-      <xs:element name="Settings" type="ActionSettings" minOccurs="0" />
-      <xs:element name="SettingsLocks" type="ActionSettingsLocks" minOccurs="0" />
-      <xs:element name="Domain" type="Domain" minOccurs="0" />
-      <xs:element name="Target" type="BESActionTarget" minOccurs="0" />
-      <xs:element name="SourceFixletID" type="BESActionSourceFixlet" minOccurs="0" />
-    </xs:sequence>
-    <xs:attribute name="SkipUI" type="xs:boolean"/>
+  	<xs:complexContent>
+  		<xs:extension base="AbstractAction">
+  		<xs:sequence>
+	      <xs:element name="PreGroupActionScript" type="ActionScript" minOccurs="0" />
+	      <xs:element name="MemberAction" minOccurs="0" maxOccurs="unbounded">
+	        <xs:complexType>
+	          <xs:complexContent>
+	            <xs:extension base="Action">
+	              <xs:sequence>
+	                <xs:element name="IncludeInGroupRelevance" type="xs:boolean" minOccurs="0" />
+	              </xs:sequence>
+	            </xs:extension>
+	          </xs:complexContent>
+	        </xs:complexType>
+	      </xs:element>
+	      <xs:element name="PostGroupActionScript" type="ActionScript" minOccurs="0" />
+	      <xs:element name="Settings" type="ActionSettings" minOccurs="0" />
+	      <xs:element name="SettingsLocks" type="ActionSettingsLocks" minOccurs="0" />
+	      <xs:element name="Domain" type="Domain" minOccurs="0" />
+	      <xs:element name="Target" type="BESActionTarget" minOccurs="0" />
+	      <xs:element name="SourceFixletID" type="BESActionSourceFixlet" minOccurs="0" />
+	    </xs:sequence>
+	    <xs:attribute name="SkipUI" type="xs:boolean"/>
+  		</xs:extension>
+  	</xs:complexContent>
   </xs:complexType>
 
   <xs:complexType name="SourcedFixletAction">
@@ -342,23 +344,25 @@
   </xs:complexType>
 
   <xs:complexType name="Action">
-    <xs:sequence>
-      <xs:element name="Title" type="ObjectName" />
-      <xs:element name="Relevance" type="RelevanceString" />
-      <xs:element name="ActionScript" type="ActionScript" />
-      <xs:element name="SuccessCriteria" type="ActionSuccessCriteria" minOccurs="0" />
-      <xs:element name="SuccessCriteriaLocked" type="xs:boolean" minOccurs="0" />
-      <xs:element name="Parameter" type="BESActionParameter" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="SecureParameter" type="BESActionParameter" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="MIMEField" minOccurs="0" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="Name" type="xs:normalizedString" />
-            <xs:element name="Value" type="xs:normalizedString" />
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
+  	<xs:complexContent>
+  		<xs:extension base="AbstractAction">
+			   <xs:sequence>
+			     <xs:element name="ActionScript" type="ActionScript" />
+			     <xs:element name="SuccessCriteria" type="ActionSuccessCriteria" minOccurs="0" />
+			     <xs:element name="SuccessCriteriaLocked" type="xs:boolean" minOccurs="0" />
+			     <xs:element name="Parameter" type="BESActionParameter" minOccurs="0" maxOccurs="unbounded" />
+			     <xs:element name="SecureParameter" type="BESActionParameter" minOccurs="0" maxOccurs="unbounded" />
+			     <xs:element name="MIMEField" minOccurs="0" maxOccurs="unbounded">
+			       <xs:complexType>
+			         <xs:sequence>
+			           <xs:element name="Name" type="xs:normalizedString" />
+			           <xs:element name="Value" type="xs:normalizedString" />
+			         </xs:sequence>
+			       </xs:complexType>
+			     </xs:element>
+			   </xs:sequence>
+  		</xs:extension>
+  	</xs:complexContent>
   </xs:complexType>
 
   <xs:complexType name="ActionScript">
@@ -964,4 +968,11 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+
+    <xs:complexType name="AbstractAction" abstract="true">
+      <xs:sequence>
+           <xs:element name="Title" type="ObjectName" />
+           <xs:element name="Relevance" type="RelevanceString" />
+      </xs:sequence>
+    </xs:complexType>
 </xs:schema>

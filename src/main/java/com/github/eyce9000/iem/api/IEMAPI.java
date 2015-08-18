@@ -65,6 +65,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.joda.time.DateTime;
 
+import com.bigfix.schemas.bes.AbstractAction;
 import com.bigfix.schemas.bes.Action;
 import com.bigfix.schemas.bes.Analysis;
 import com.bigfix.schemas.bes.BES;
@@ -93,6 +94,7 @@ import com.github.eyce9000.iem.api.model.SiteID;
 import com.github.eyce9000.iem.api.model.FixletID.ResourceType;
 import com.github.eyce9000.iem.api.relevance.DataType;
 import com.github.eyce9000.iem.api.relevance.QueryResultColumn;
+import com.github.eyce9000.iem.api.relevance.RESTResultParser;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.RowSerializer;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
@@ -192,6 +194,19 @@ public class IEMAPI extends AbstractIEMAPI {
 	//*******************************************************************
 	// C O M P U T E R   M E T H O D S
 	//*******************************************************************
+	
+	public List<BESAPI.Computer> getComputers(){
+		return this.getBESAPIContent(
+				apiRoot.path("computers").request().get(),
+				BESAPI.Computer.class);
+	}
+	
+	public Optional<BESAPI.Computer> getComputer(long computerid){
+		WebTarget target = apiRoot
+				.path("computer/{computerid}")
+				.resolveTemplate("computerid",computerid);
+		return getSingleBESAPIContent(target.request().get(),BESAPI.Computer.class);
+	}
 	
 	public BESAPI.ComputerSettings getComputerSettings(long computerid) throws Exception{
 		WebTarget target = apiRoot
@@ -304,15 +319,38 @@ public class IEMAPI extends AbstractIEMAPI {
 	}
 
 	//*******************************************************************
+	// C O M P U T E R  G R O U P  M E T H O D S
+	//*******************************************************************
+	
+	public List<BESAPI.ComputerGroup> getComputerGroups(){
+		return getBESAPIContent(apiRoot.path("/computergroups").request().get(),BESAPI.ComputerGroup.class);
+	}
+	
+	public Optional<BESAPI.ComputerGroup> getComputerGroup(String siteType, String site, long groupId){
+		WebTarget target = buildSiteTarget(apiRoot.path("/computergroup/"),siteType,site)
+				.path("/{groupId}")
+				.resolveTemplate("groupId", groupId);
+		return getSingleBESAPIContent(target.request().get(), BESAPI.ComputerGroup.class);
+	}
+	
+	public List<BESAPI.Computer> getComputerGroupMembers(String siteType, String site, long groupId){
+		WebTarget target = buildSiteTarget(apiRoot.path("/computergroup/"),siteType,site)
+				.path("/{groupId}/computers")
+				.resolveTemplate("groupId", groupId);
+		return getBESAPIContent(target.request().get(),BESAPI.Computer.class);
+	}
+	
+	
+	//*******************************************************************
 	// A C T I O N   M E T H O D S
 	//*******************************************************************
 	
 	
-	public Optional<Action> getAction(BigInteger actionId){
+	public Optional<AbstractAction> getAction(BigInteger actionId){
 		WebTarget target = apiRoot
 				.path("action/{actionid}")
 				.resolveTemplate("actionid",actionId);
-		return getSingleBESContent(target.request().get(),Action.class);
+		return getSingleBESContent(target.request().get(),AbstractAction.class);
 	}
 	
 	public BESAPI.ActionResults getActionStatus(BESAPI.Action action){
@@ -673,6 +711,7 @@ public class IEMAPI extends AbstractIEMAPI {
 	public Response get(String path){
 		return root.path(path).request().get();
 	}
+	
 	public Response delete(String path){
 		return root.path(path).request().delete();
 	}
@@ -708,8 +747,31 @@ public class IEMAPI extends AbstractIEMAPI {
 	
 	@Override
 	public void executeQueryWithHandler(SessionRelevanceQuery srq, RawResultHandler handler) throws RelevanceException, HandlerException{
-		QueryResult result = runRelevanceQuery(srq.constructQuery());
-		processResponse(result, srq,handler);
+		WebTarget target = apiRoot.path("query");
+		try {
+			String data = "relevance="+URLEncoder.encode(srq.constructQuery(), "UTF-8");
+			Response response = target.request(MediaType.APPLICATION_XML).post(Entity.text(data));
+
+			if(response.getStatus()>=200 && response.getStatus()<300){
+				RESTResultParser parser = new RESTResultParser();
+				parser.parse(srq, (InputStream)response.getEntity(), handler);
+			}
+			else{
+				try{
+					String error = "";
+					BufferedReader reader = new BufferedReader(new InputStreamReader((InputStream)response.getEntity()));
+					String line = null;
+					while((line=reader.readLine())!=null)
+						error += line +"\n";
+					throw new BadRequestException(response.getStatus()+": "+error);
+				}
+				catch(Exception ex){
+					throw new BadRequestException(ex);
+				}
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	@Override
 	public <T> List<T> executeQuery(SessionRelevanceQuery srq, Class<? extends T> clazz) throws RelevanceException{
@@ -729,16 +791,4 @@ public class IEMAPI extends AbstractIEMAPI {
 		return handler.getResults();
 	}
 	
-
-	private QueryResult runRelevanceQuery(String query){
-		WebTarget target = apiRoot.path("query");
-		try {
-			String data = "relevance="+URLEncoder.encode(query, "UTF-8");
-			Response response = target.request(MediaType.APPLICATION_XML).post(Entity.text(data));
-			return (QueryResult)queryUnmarshaller.unmarshal((InputStream)response.getEntity());
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 }

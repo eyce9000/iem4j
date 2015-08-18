@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BESAPI xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BESAPI.xsd">
+	<Query Resource="names of bes computers whose (name of it as lowercase contains &quot;bigfix&quot;)">
+		<Result>
+			<Answer type="string">BIGFIXSRV</Answer>
+			<Answer type="string">BIGFIXW7</Answer>
+			<Answer type="string">BIGFIX1</Answer>
+			<Answer type="string">SFBIGFIXDC01</Answer>
+			<Answer type="string">BIGFIX8</Answer>
+		</Result>
+		<Evaluation>
+			<Time>122.738ms</Time>
+			<Plurality>Plural</Plurality>
+		</Evaluation>
+	</Query>
+</BESAPI>

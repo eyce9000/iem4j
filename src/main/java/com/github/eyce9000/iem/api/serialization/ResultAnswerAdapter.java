@@ -1,7 +1,11 @@
 package com.github.eyce9000.iem.api.serialization;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnumValue;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
@@ -42,6 +46,7 @@ public class ResultAnswerAdapter extends XmlAdapter<ResultAnswerAdapter.Answer,O
 		return typed;
 	}
 	
+	@XmlRootElement(name="Answer")
 	public static class Answer{
 		@XmlAttribute(name="type")
 		private AnswerValueType type = AnswerValueType.STRING;

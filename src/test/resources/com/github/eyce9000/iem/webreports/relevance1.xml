@@ -1,0 +1,43 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <soapenv:Header>
+      <bf:ResponseHeaderElement xmlns:bf="http://schemas.bigfix.com/Relevance" xmlns:xsi="http://www.w3.org/2001/XML-Schema-instance">
+         <bf:sessionToken>gMmgiAl2+nTfyNpa1qGeEWc2nHU</bf:sessionToken>
+      </bf:ResponseHeaderElement>
+   </soapenv:Header>
+   <soapenv:Body>
+      <GetStructuredRelevanceResultResponse xmlns="http://schemas.bigfix.com/Relevance">
+         <StructuredRelevanceResult>
+            <results>
+               <Tuple>
+                  <String>BIGFIXSRV</String>
+                  <Integer>2027482</Integer>
+                  <DateTime>2015-08-06T17:07:19-04:00</DateTime>
+               </Tuple>
+               <Tuple>
+                  <String>BIGFIXW7</String>
+                  <Integer>6119757</Integer>
+                  <DateTime>2015-08-06T17:20:00-04:00</DateTime>
+               </Tuple>
+               <Tuple>
+                  <String>BIGFIX1</String>
+                  <Integer>10883548</Integer>
+                  <DateTime>2015-08-06T17:09:38-04:00</DateTime>
+               </Tuple>
+               <Tuple>
+                  <String>SFBIGFIXDC01</String>
+                  <Integer>11175538</Integer>
+                  <DateTime>2015-08-06T17:08:31-04:00</DateTime>
+               </Tuple>
+               <Tuple>
+                  <String>BIGFIX8</String>
+                  <Integer>16437965</Integer>
+                  <DateTime>2015-08-06T17:21:01-04:00</DateTime>
+               </Tuple>
+            </results>
+            <plural>true</plural>
+            <type>( string, integer, time )</type>
+            <evaltime>265</evaltime>
+         </StructuredRelevanceResult>
+      </GetStructuredRelevanceResultResponse>
+   </soapenv:Body>
+</soapenv:Envelope>

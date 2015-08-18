@@ -1,5 +1,6 @@
 package com.github.eyce9000.iem.webreports;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -13,6 +14,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 import javax.xml.bind.JAXBContext;
@@ -20,6 +22,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.stream.XMLStreamException;
 
 import org.joda.time.DateTime;
 
@@ -39,6 +42,8 @@ import com.github.eyce9000.iem.api.relevance.handlers.impl.TypedResultListHandle
 import com.github.eyce9000.iem.api.serialization.BESContextProvider;
 import com.github.eyce9000.iem.webreports.relevance.Envelope;
 import com.github.eyce9000.iem.webreports.relevance.RequestBuilder;
+import com.github.eyce9000.iem.webreports.relevance.ResultParser;
+import com.github.eyce9000.iem.webreports.relevance.ResultParser.TokenHandler;
 
 public class WebreportsAPI implements RelevanceAPI{
 	private String password;
@@ -76,37 +81,16 @@ public class WebreportsAPI implements RelevanceAPI{
 		this.tokenHolder = holder;
 	}
 	
-	private synchronized String getToken() throws RelevanceException{
+	private RequestBuilder getBuilder(){
+		RequestBuilder builder = new RequestBuilder();
 		String token = tokenHolder.getToken();
 		if(token==null){
-			RequestBuilder builder = new RequestBuilder();
 			builder.login(username, password);
-			Envelope request = builder.buildRelevanceRequest("\"test\"");
-			Envelope response = request(request);
-			token = response.getHeader().getResponseHeader().getSessionToken();
-			tokenHolder.setToken(token);
 		}
-		return token;
-	}
-	
-	private StructuredRelevanceResult executeQuery(String relevance) throws JAXBException, RelevanceException{
-		RequestBuilder builder = new RequestBuilder();
-		builder.authenticate(username, getToken());
-		
-		Envelope envelope = builder.buildRelevanceRequest(relevance);
-		Envelope response = request(envelope);
-		
-		return response.getBody().getStructuredRelevanceResponse().getStructuredRelevanceResult();
-	}
-	
-	private Envelope request(Envelope request) throws RelevanceException{
-		Entity<Envelope> entity = Entity.entity(request, MediaType.TEXT_XML);
-		
-		Envelope response = apiRoot.request().accept(MediaType.TEXT_XML).post(entity, Envelope.class);
-		if(response.getBody().getFaultResponse()!=null){
-			throw new RelevanceException(response.getBody().getFaultResponse().getFaultString());
+		else{
+			builder.authenticate(username, token);
 		}
-		return response;
+		return builder;
 	}
 	
 	@Override
@@ -122,20 +106,23 @@ public class WebreportsAPI implements RelevanceAPI{
 	}
 	
 	@Override
-	public void executeQueryWithHandler(SessionRelevanceQuery srq, RawResultHandler handler) throws RelevanceException, HandlerException{
-		String query = srq.constructQuery();
-		try{
-			StructuredRelevanceResult relevanceResult = executeQuery(query);
-			String error = relevanceResult.getError();
-			if(error!=null){
-				RelevanceException exp = new RelevanceException(error);
-				handler.onError(exp);
-				throw exp;
+	public void executeQueryWithHandler(SessionRelevanceQuery srq, final RawResultHandler handler) throws RelevanceException, HandlerException{
+		RequestBuilder builder = getBuilder();
+		Envelope envelope = builder.buildRelevanceRequest(srq.constructQuery());
+		Entity<Envelope> entity = Entity.entity(envelope, MediaType.TEXT_XML);
+		TokenHandler wrapper = new TokenHandler(handler){
+			@Override
+			public void onToken(String token) {
+				tokenHolder.setToken(token);
 			}
-			processResponse(relevanceResult, srq,handler);
+		};
+		Response response = apiRoot.request().accept(MediaType.TEXT_XML).post(entity);
+		try{
+			ResultParser parser = new ResultParser();
+			parser.parse(srq,(InputStream)response.getEntity(), wrapper);
 		}
-		catch(JAXBException jaxex){
-			throw new RelevanceException(jaxex);
+		catch(Exception e){
+			throw new RelevanceException(e);
 		}
 	}
 	
@@ -158,73 +145,6 @@ public class WebreportsAPI implements RelevanceAPI{
 		return handler.getResults();
 	}
 
-	
-	private void processResponse(StructuredRelevanceResult relevanceResult, SessionRelevanceQuery srq, RawResultHandler handler) throws HandlerException{
-		List<QueryResultColumn> columns = srq.getColumns();
-		List<Object> untypedResults = relevanceResult.getResults().getBooleanOrIntegerOrString();
-		if(untypedResults.isEmpty()){
-			handler.onComplete(relevanceResult.getEvaltime().longValue());
-			return;
-		}
-		
-		List firstRow = getRow(0,untypedResults);
-		int diff = firstRow.size() - columns.size();
-    	if(diff > 0){
-    		List<QueryResultColumn> newColumns = new ArrayList<QueryResultColumn>(columns);
-    		for(int i=0; i<firstRow.size(); i++){
-    			if(i>=columns.size()){
-    				newColumns.add(new QueryResultColumn("col"+i,DataType.string));
-    			}
-    		}
-    		columns = newColumns;
-    	}
-    	else if (diff < 0){
-    		while(columns.size() > firstRow.size()){
-        		columns.remove(columns.size()-1);
-    		}
-    	}
-    	srq.setColumns(columns);
-		for(int rowNum=0; rowNum<untypedResults.size(); rowNum++){
-			List row = getRow(rowNum,untypedResults);
-			Object[] rowValues = new Object[columns.size()];
-			HashMap<String,Object> sampleRowValues = new HashMap<String,Object>();
-	    	for(int colNum=0; colNum<columns.size(); colNum++){
-	    		QueryResultColumn column = columns.get(colNum);
-				Object value;
-				Object rawValue = row.get(colNum);
-				if(rawValue instanceof BigDecimal)
-					value = ((BigDecimal)rawValue).doubleValue();
-				else if(rawValue instanceof BigInteger)
-					value = ((BigInteger)rawValue).intValue();
-				else if(rawValue instanceof XMLGregorianCalendar){
-					value = new DateTime(((XMLGregorianCalendar)rawValue).toGregorianCalendar().getTimeInMillis()).toDate();
-				}
-				else
-					value = rawValue;
-				
-				rowValues[colNum] = value;
-				sampleRowValues.put(column.getName(),value);
-	    	}
-	    	try{
-	    		handler.onResult(sampleRowValues);
-	    	}
-	    	catch(Exception ex){
-	    		throw new HandlerException(ex);
-	    	}
-		}
-		handler.onComplete(relevanceResult.getEvaltime().longValue());
-	}
-	private List getRow(int rowNumber,List<Object> untypedResults){
-		Object result = untypedResults.get(rowNumber);
-		List row;
-    	if(result instanceof ResultList){
-    		row = ((ResultList)result).getBooleanOrIntegerOrString();
-    	}
-    	else{
-    		row = Arrays.asList(new Object[]{result});
-    	}
-    	return row;
-	}
 	
 }
 
