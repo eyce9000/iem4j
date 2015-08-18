@@ -7,9 +7,9 @@ IEM4J uses the IEM RESTAPI schema version 9.2 and higher.
 
 ##Build Instruction##
 ```bash
-git clone https://github.com/eyce9000/iem-client.git
-cd iem-client
-mvn package
+git clone https://github.com/eyce9000/iem4j.git
+cd iem4j
+mvn install -Dmaven.test.skip=true
 ```
 
 ##Use as Maven Dependency##
