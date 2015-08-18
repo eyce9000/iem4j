@@ -31,7 +31,7 @@ Then add this dependency:
 <dependency>
   <groupId>com.github.eyce9000</groupId>
   <artifactId>iem4j-client</artifactId>
-  <version>1.2.2</version>
+  <version>1.3.5</version>
 </dependency>
 ```
 
