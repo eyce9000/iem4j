@@ -437,10 +437,10 @@ public class IEMAPI extends AbstractIEMAPI {
 		putBESContent(target,site,Site.class);
 	}
 	
-	public void createCustomSite(CustomSite site){
+	public BESAPI.CustomSite createCustomSite(CustomSite site){
 		BES bes = new BES();
 		bes.getFixletOrTaskOrAnalysis().add(site);
-		BESAPI besapi = this.importContent("custom", site.getName(), bes);
+		return this.getBESAPIContent(post("/api/sites",bes), BESAPI.CustomSite.class).get(0);
 	}
 	
 	//*******************************************************************
