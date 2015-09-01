@@ -1,9 +1,9 @@
-#IEM4J - Java Library for IBM Endpoint Manager APIs#
+#IEM4J - Java Library for Bigfix / IBM Endpoint Manager (IEM) APIs#
 
 ##About the Library##
-This library is a wrapper of the IBM Endpoint Manager REST API and Webreports API. This library does not cover the functionality of the REST API 100%, but is mostly focused on content (fixlet) manipulation. 
+This library is a wrapper of the Bigfix (IBM Endpoint Manager / IEM) REST API and Webreports API. This library does not cover the functionality of the REST API 100%, but is mostly focused on content (fixlet) manipulation. 
 
-IEM4J uses the IEM RESTAPI schema version 9.2 and higher.
+IEM4J uses the Bigfix RESTAPI schema version 9.2 and higher.
 
 ##Build Instruction##
 ```bash
