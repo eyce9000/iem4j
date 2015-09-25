@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.eyce9000</groupId>
 	<artifactId>iem4j-client</artifactId>
-	<version>1.3.8</version>
+	<version>1.3.9</version>
 	<name>IEM Client</name>
 	<scm>
 		<connection>scm:git:git://github.com/eyce9000/iem-client.git</connection>
@@ -130,6 +130,7 @@
 				<configuration>
 					<extensions>
 						<extension>net.java.dev.jaxb2-commons:jaxb-fluent-api:2.1.8</extension>
+            <extension>net.sourceforge.ccxjc:cc-xjc-plugin:2.0</extension>
 					</extensions>
 				</configuration>
 				<executions>
@@ -148,6 +149,7 @@
 									<bindingFile>${basedir}/src/main/resources/BES.xjb</bindingFile>
 									<extensionArgs>
 										<extensionArg>-Xfluent-api</extensionArg>
+                    <extensionArg>-copy-constructor</extensionArg>
 									</extensionArgs>
 								</xsdOption>
 								<xsdOption>
@@ -156,6 +158,7 @@
 									<bindingFile>${basedir}/src/main/resources/BESAPI.xjb</bindingFile>
 									<extensionArgs>
 										<extensionArg>-Xfluent-api</extensionArg>
+                    <extensionArg>-copy-constructor</extensionArg>
 									</extensionArgs>
 								</xsdOption>
 							</xsdOptions>
