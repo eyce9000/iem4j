@@ -59,6 +59,8 @@ public class RESTResultParserTest {
 			RESTResultParser.class.getResourceAsStream("relevance1.xml"), handler);
 		new RESTResultParser().parse(new SessionRelevanceQuery(),
 			RESTResultParser.class.getResourceAsStream("relevance3.xml"), handler);
+		new RESTResultParser().parse(new SessionRelevanceQuery(),
+			RESTResultParser.class.getResourceAsStream("relevance-fail.xml"), handler);
 
 	}
 }

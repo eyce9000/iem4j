@@ -72,8 +72,9 @@ public class RESTResultParser {
 
 				if(localName.equals("Error")){
 					JAXBElement<String> element = unmarshaller.unmarshal(reader,String.class);
-					handler.onError(new RelevanceException(element.getValue()));
-					return;
+					RelevanceException ex = new RelevanceException(element.getValue());
+					handler.onError(ex);
+					throw ex;
 				}
 				else if(localName.equals("Result")){
 					inResults = true;

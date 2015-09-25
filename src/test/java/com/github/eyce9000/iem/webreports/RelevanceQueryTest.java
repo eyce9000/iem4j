@@ -92,8 +92,11 @@ public class RelevanceQueryTest {
 			System.out.println(ex.getMessage());
 			throw ex;
 		}
+		
+		
+		testInvalidQuery(temClient);
+		testInvalidQuery(webreportsClient);
 	}
-	
 	
 	public void testSessionRelevanceQuery(RelevanceAPI client) throws RelevanceException, HandlerException{
 		SessionRelevanceQuery srq = SessionRelevanceQuery.parseQuery(
@@ -132,6 +135,19 @@ public class RelevanceQueryTest {
 		for(ComputerData row : data){
 			assertNotNull(row.name);
 		}
+	}
+	
+	public void testInvalidQuery(RelevanceAPI api){
+		SessionRelevanceQuery srq = SessionRelevanceQuery.parseQuery(
+			"this should fail");
+		
+		RelevanceException exception = null;
+		try{
+			api.executeQuery(srq);
+		}catch(RelevanceException ex){exception = ex;}
+		
+		assertTrue(exception!=null);
+		assertTrue(exception.getMessage()!=null);
 	}
 
 	

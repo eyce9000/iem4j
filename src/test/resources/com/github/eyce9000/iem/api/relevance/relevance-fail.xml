@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BESAPI xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BESAPI.xsd">
+	<Query Resource="this should fail">
+		<Result></Result>
+		<Error>The operator "this should fail" is not defined.</Error>
+	</Query>
+</BESAPI>

@@ -769,7 +769,14 @@ public class IEMAPI extends AbstractIEMAPI {
 					throw new BadRequestException(ex);
 				}
 			}
-		} catch (Exception e) {
+		} 
+		catch (RelevanceException e){
+			throw e;
+		}
+		catch (HandlerException e){
+			throw e;
+		}
+		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
