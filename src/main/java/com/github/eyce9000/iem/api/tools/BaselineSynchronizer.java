@@ -16,7 +16,7 @@ import com.bigfix.schemas.bes.ActionSuccessCriteria;
 import com.bigfix.schemas.bes.FixletAction;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.Task;
-import com.github.eyce9000.iem.api.IEMAPI;
+import com.github.eyce9000.iem.api.RESTAPI;
 import com.github.eyce9000.iem.api.model.FixletID;
 import com.github.eyce9000.iem.api.model.SiteID;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
@@ -49,9 +49,9 @@ public class BaselineSynchronizer {
 	
 	private SessionRelevanceQuery fixletQuery,groupQuery;
 	private RelevanceTranslator translator;
-	protected IEMAPI client;
+	protected RESTAPI client;
 	
-	public BaselineSynchronizer(IEMAPI client){
+	public BaselineSynchronizer(RESTAPI client){
 		this.client = client;
 		fixletQuery = SessionRelevanceBuilder
 				.fromRelevance(FIXLET_RELEVANCE+" whose (id of it = ${fixletId} and (url of site of it = \"${siteUrl}\" or url of bes site whose(master site flag of it = true) = \"${siteUrl}\"))")

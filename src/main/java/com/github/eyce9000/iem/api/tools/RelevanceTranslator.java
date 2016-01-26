@@ -15,7 +15,7 @@ import com.bigfix.schemas.bes.SearchComponentGroupReference;
 import com.bigfix.schemas.bes.SearchComponentPropertyReference;
 import com.bigfix.schemas.bes.SearchComponentRelevance;
 import com.bigfix.schemas.bes.TrueFalseComparison;
-import com.github.eyce9000.iem.api.IEMAPI;
+import com.github.eyce9000.iem.api.RESTAPI;
 import com.github.eyce9000.iem.api.model.GroupID;
 import com.github.eyce9000.iem.api.model.GroupID.GroupType;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
@@ -36,12 +36,12 @@ public class RelevanceTranslator {
 			+ ") of bes computer groups whose (name of it = \"${groupName}\")"; 
 	
 	private SessionRelevanceQuery groupQuery;
-	private IEMAPI client;
+	private RESTAPI client;
 	public enum Function{AND,OR}
 
 	protected RelevanceTranslator(){};
 	
-	public RelevanceTranslator(IEMAPI client){
+	public RelevanceTranslator(RESTAPI client){
 		this.client = client;
 		groupQuery = SessionRelevanceBuilder
 				.fromRelevance(GROUP_QUERY)

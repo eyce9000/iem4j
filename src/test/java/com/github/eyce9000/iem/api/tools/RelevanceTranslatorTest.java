@@ -20,7 +20,7 @@ import com.bigfix.schemas.bes.RelevanceString;
 import com.bigfix.schemas.bes.SearchComponentRelevance;
 import com.bigfix.schemas.bes.TrueFalseComparison;
 import com.github.eyce9000.iem.api.ConnectionDoc;
-import com.github.eyce9000.iem.api.IEMAPI;
+import com.github.eyce9000.iem.api.RESTAPI;
 import com.github.eyce9000.iem.api.model.GroupID;
 import com.github.eyce9000.iem.api.model.GroupID.GroupType;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
@@ -32,7 +32,7 @@ public class RelevanceTranslatorTest {
 	private static ConnectionDoc	webreportsDoc;
 	private static ConnectionDoc	restapiDoc;
 	private RelevanceTranslator	translator;
-	private IEMAPI	temClient;
+	private RESTAPI	temClient;
 
 	@BeforeClass
 	public static void setupClass(){
@@ -50,7 +50,7 @@ public class RelevanceTranslatorTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		temClient = new IEMAPI(restapiDoc.host,restapiDoc.username,restapiDoc.password);
+		temClient = new RESTAPI(restapiDoc.host,restapiDoc.username,restapiDoc.password);
 		translator = new RelevanceTranslator(temClient);
 	}
 	
