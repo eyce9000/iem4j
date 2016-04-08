@@ -19,6 +19,7 @@ import com.bigfix.schemas.bes.GroupRelevance;
 import com.bigfix.schemas.bes.RelevanceString;
 import com.bigfix.schemas.bes.SearchComponentRelevance;
 import com.bigfix.schemas.bes.TrueFalseComparison;
+import com.github.eyce9000.iem.api.ApacheClientBuilder;
 import com.github.eyce9000.iem.api.ConnectionDoc;
 import com.github.eyce9000.iem.api.RESTAPI;
 import com.github.eyce9000.iem.api.model.GroupID;
@@ -50,7 +51,7 @@ public class RelevanceTranslatorTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		temClient = new RESTAPI(restapiDoc.host,restapiDoc.username,restapiDoc.password);
+		temClient = new RESTAPI(new ApacheClientBuilder().insecure().build(),restapiDoc.host,restapiDoc.username,restapiDoc.password);
 		translator = new RelevanceTranslator(temClient);
 	}
 	

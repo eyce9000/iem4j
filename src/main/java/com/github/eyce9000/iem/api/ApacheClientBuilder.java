@@ -64,18 +64,27 @@ public class ApacheClientBuilder {
 	}
 	
 	public HttpClient build() {
-		RegistryBuilder rbuilder = RegistryBuilder.<ConnectionSocketFactory>create();
+		Registry<ConnectionSocketFactory> r = null;
 		if(insecure){
+			RegistryBuilder rbuilder  = RegistryBuilder.<ConnectionSocketFactory>create();
 			rbuilder = rbuilder.register("https",insecureSocketFactory());
+			r = rbuilder.build();
 		}
 		
-		Registry<ConnectionSocketFactory> r = rbuilder.build();
 		
 		HttpClientConnectionManager cm;
-		if(pooled)
-			cm = new PoolingHttpClientConnectionManager(r);
-		else
-			cm = new BasicHttpClientConnectionManager(r);
+		if(pooled){
+			if(r!=null)
+				cm = new PoolingHttpClientConnectionManager(r);
+			else
+				cm = new PoolingHttpClientConnectionManager();
+		}
+		else{
+			if(r!=null)
+				cm = new BasicHttpClientConnectionManager(r);
+			else
+				cm = new BasicHttpClientConnectionManager();
+		}
 		CloseableHttpClient apacheHttpClient = HttpClients.custom()
 			.setConnectionManager(cm)
 			.build();

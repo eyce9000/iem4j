@@ -13,12 +13,14 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 
+import org.apache.http.client.HttpClient;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.eyce9000.iem.api.ApacheClientBuilder;
 import com.github.eyce9000.iem.api.ConnectionDoc;
 import com.github.eyce9000.iem.api.RESTAPI;
 import com.github.eyce9000.iem.api.RelevanceAPI;
@@ -53,8 +55,9 @@ public class RelevanceQueryTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		temClient = new RESTAPI(restapiDoc.host,restapiDoc.username,restapiDoc.password);
-		webreportsClient = new WebreportsAPI(webreportsDoc.host,webreportsDoc.username,webreportsDoc.password);
+		HttpClient client = new ApacheClientBuilder().insecure().build();
+		temClient = new RESTAPI(client,restapiDoc.host,restapiDoc.username,restapiDoc.password);
+		webreportsClient = new WebreportsAPI(client,webreportsDoc.host,webreportsDoc.username,webreportsDoc.password);
 	}
 
 	@Test
