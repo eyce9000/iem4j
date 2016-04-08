@@ -51,11 +51,11 @@ public class Paths {
 	public static String computerSetting(long id,String settingName){
 		return computer(id)+"/setting/"+settingName;
 	}
-	public static String computerGroup(String site, String siteType){
-		return buildSiteTarget(api+"/computergroup",site,siteType);
+	public static String computerGroup(long id){
+		return api+"/computergroup/master/"+id;
 	}
-	public static String computerGroupMembers(String site, String siteType){
-		return buildSiteTarget(api+"/computergroup",site,siteType)+"/computers";
+	public static String computerGroupMembers(long id){
+		return computerGroup(id)+"/computers";
 	}
 	public static String action(long id){
 		return api+"/action/"+id;

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -16,6 +17,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -43,6 +46,9 @@ import com.github.eyce9000.iem.api.relevance.results.ResultTuple;
 import com.google.common.base.Optional;
 
 public abstract class AbstractRESTAPI implements RelevanceAPI {
+	static {
+		Logger.getLogger("org.apache.http.client.protocol").setLevel(Level.OFF);
+	}
 	public static enum Action {
 		Get, Post, Put, Delete
 	}
@@ -92,7 +98,7 @@ public abstract class AbstractRESTAPI implements RelevanceAPI {
 		return values;
 	}
 
-	protected <T> HttpResponse requestBES(Action action, String path, T value){
+	protected <T extends Serializable> HttpResponse requestBES(Action action, String path, T value){
 		BES bes = new BES();
 		bes.getFixletOrTaskOrAnalysis().add(value);
 		return request(action, path, bes);
@@ -199,17 +205,17 @@ public abstract class AbstractRESTAPI implements RelevanceAPI {
 	public <T> HttpResponse post(String path, T bes) {
 		return request(Action.Post, path, bes);
 	}
-	public <T> HttpResponse postBES(String path, T value) {
+	public <T extends Serializable> HttpResponse postBES(String path, T value) {
 		return requestBES(Action.Post, path, value);
 	}
-	public <T,R> List<R> postBES(String path, T value, Class<R> type){
+	public <T extends Serializable,R> List<R> postBES(String path, T value, Class<R> type){
 		return getContent(postBES(path,value),type);
 	}
 
 	public <T> HttpResponse put(String path, T value) {
 		return request(Action.Put, path, value);
 	}
-	public <T> HttpResponse putBES(String path, T value) {
+	public <T extends Serializable> HttpResponse putBES(String path, T value) {
 		return requestBES(Action.Put, path, value);
 	}
 

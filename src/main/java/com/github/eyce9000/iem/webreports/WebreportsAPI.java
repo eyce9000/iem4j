@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import org.joda.time.DateTime;
 
 import com.bigfix.schemas.relevance.ResultList;
 import com.bigfix.schemas.relevance.StructuredRelevanceResult;
+import com.github.eyce9000.iem.api.ApacheClientBuilder;
 import com.github.eyce9000.iem.api.RelevanceAPI;
 import com.github.eyce9000.iem.api.impl.AbstractRESTAPI;
 import com.github.eyce9000.iem.api.relevance.DataType;
@@ -63,50 +66,18 @@ public class WebreportsAPI extends AbstractRESTAPI {
 	private String			username;
 	private TokenHolder		tokenHolder	= new TimedTokenHolder();
 
-	public WebreportsAPI(URI uri, String username, String password)
+	public WebreportsAPI(HttpClient apacheHttpClient,URI uri, String username, String password)
 			throws JAXBException, Exception {
 		this.baseURI = uri;
-		SSLContext sslContext = SSLContext.getInstance("SSL");
-		sslContext.init(null, new TrustManager[] { new X509TrustManager() {
-			@Override
-			public X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-
-			@Override
-			public void checkClientTrusted(X509Certificate[] certs, String authType) {
-			}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] certs, String authType) {
-			}
-		} }, new SecureRandom());
-		SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(sslContext,
-			SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-		Registry<ConnectionSocketFactory> r = RegistryBuilder.<ConnectionSocketFactory> create()
-			.register(uri.getScheme(), factory).build();
-
-		HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(r);
-		HttpClient apacheHttpClient = HttpClients.custom().setConnectionManager(cm).build();
-
+		
 		client = Executor.newInstance(apacheHttpClient);
 		this.username = username;
 		this.password = password;
 		initializeJAXB();
 	}
 
-	public WebreportsAPI(String host, String username, String password)
-			throws IllegalArgumentException, Exception {
-		this(new URIBuilder().setPath("/soap").setHost(host).setScheme("http").setPort(80).build(),
-			username, password);
-	}
-
-	public WebreportsAPI(Executor client, URI uri, String username, String password) throws JAXBException {
-		this.baseURI = uri;
-		this.client = client;
-		this.username = username;
-		this.password = password;
-		initializeJAXB();
+	public WebreportsAPI(URI uri, String username, String password) throws Exception {
+		this(new ApacheClientBuilder().build(),uri,username,password);
 	}
 
 	private void initializeJAXB() throws JAXBException {

@@ -19,20 +19,17 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>${httpcomponents.version}</version>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
 			<version>${httpcomponents.version}</version>
-			<optional>true</optional>
 		</dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>fluent-hc</artifactId>
-      <version>${httpcomponents.version}</version>
-      <optional>true</optional>
-    </dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>fluent-hc</artifactId>
+			<version>${httpcomponents.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
@@ -74,9 +71,9 @@
 			<version>2.2</version>
 		</dependency>
 		<dependency>
-		  <groupId>commons-io</groupId>
-		  <artifactId>commons-io</artifactId>
-		  <version>2.4</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -84,12 +81,12 @@
 			<version>1.7.2</version>
 			<scope>test</scope>
 		</dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-all</artifactId>
-      <version>1.3</version>
-      <scope>test</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-all</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -122,13 +119,30 @@
 			<plugin>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-xjc-plugin</artifactId>
-				<version>2.3.0</version>
+				<version>3.0.5</version>
 				<configuration>
 					<extensions>
-						<extension>net.java.dev.jaxb2-commons:jaxb-fluent-api:2.1.8</extension>
-            <extension>net.sourceforge.ccxjc:cc-xjc-plugin:2.0</extension>
+						<extension>org.jvnet.jaxb2_commons:jaxb2-fluent-api:3.0</extension>
+						<extension>org.jvnet.jaxb2_commons:jaxb2-basics-annotate:1.0.2</extension>
 					</extensions>
 				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.jvnet.jaxb2_commons</groupId>
+						<artifactId>jaxb2-fluent-api</artifactId>
+						<version>3.0</version>
+					</dependency>
+					<dependency>
+						<groupId>org.jvnet.jaxb2_commons</groupId>
+						<artifactId>jaxb2-basics-annotate</artifactId>
+						<version>1.0.2</version>
+					</dependency>
+					<dependency>
+						<groupId>org.eclipse.persistence</groupId>
+						<artifactId>org.eclipse.persistence.moxy</artifactId>
+						<version>2.5.0</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<id>generate-xsd-sources</id>
@@ -140,21 +154,21 @@
 							<sourceRoot>${project.build.directory}/generated-sources/java/</sourceRoot>
 							<xsdOptions>
 								<xsdOption>
-                  <extension>true</extension>
+									<extension>true</extension>
 									<xsd>${basedir}/src/main/resources/BES.xsd</xsd>
 									<bindingFile>${basedir}/src/main/resources/BES.xjb</bindingFile>
 									<extensionArgs>
 										<extensionArg>-Xfluent-api</extensionArg>
-                    <extensionArg>-copy-constructor</extensionArg>
+										<extensionArg>-Xannotate</extensionArg>
 									</extensionArgs>
 								</xsdOption>
 								<xsdOption>
-								  <extension>true</extension>
+									<extension>true</extension>
 									<xsd>${basedir}/src/main/resources/BESAPI.xsd</xsd>
 									<bindingFile>${basedir}/src/main/resources/BESAPI.xjb</bindingFile>
 									<extensionArgs>
 										<extensionArg>-Xfluent-api</extensionArg>
-                    <extensionArg>-copy-constructor</extensionArg>
+										<extensionArg>-Xannotate</extensionArg>
 									</extensionArgs>
 								</xsdOption>
 							</xsdOptions>
@@ -209,7 +223,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.9.1</version>
+				<version>1.9.1</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>

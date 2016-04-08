@@ -84,11 +84,25 @@ public class QueryResultColumn{
 	public static List<QueryResultColumn> extractColumns(String query){
 		ArrayList<QueryResultColumn> results = new ArrayList<QueryResultColumn>();
 		Pattern p = Pattern.compile("//@Column.*");
+		Pattern typePattern = Pattern.compile("//@Column\\((\\w+)\\)");
+		
 		Matcher m = p.matcher(query);
 		for(int i=0;m.find();i++){
 			String match = query.substring(m.start(),m.end());
-			String name = match.replace("//@Column", "").trim();
-			QueryResultColumn column = new QueryResultColumn(name,DataType.string);
+			Matcher typeMatcher = typePattern.matcher(match);
+			DataType type = DataType.string;
+			String name = null;
+			if(typeMatcher.find()){
+				String typeRaw = typeMatcher.group(1);
+				if(typeRaw!=null)
+					type = DataType.valueOf(typeRaw);
+				int end1 = typeMatcher.end();
+				name = match.substring(end1,match.length()).trim();
+			}
+			else{
+				name = match.replace("//@Column", "").trim();
+			}
+			QueryResultColumn column = new QueryResultColumn(name,type);
 			column.setIndex(i);
 			results.add(column);
 		}

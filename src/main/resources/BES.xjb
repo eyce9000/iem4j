@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bindings xmlns="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+          extensionBindingPrefixes="xjc annox" 
+          xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+          xmlns:annox="http://annox.dev.java.net"
           version="2.1">
     <globalBindings choiceContentProperty="false">
         <serializable uid="1" />

@@ -31,7 +31,7 @@ Then add this dependency:
 <dependency>
   <groupId>com.github.eyce9000</groupId>
   <artifactId>iem4j-client</artifactId>
-  <version>1.3.8</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -40,7 +40,7 @@ Then add this dependency:
 ###Reading, Creating and Uploading Fixlets###
 You can upload and download ActionFixlets, Tasks, Analyses and Baselines. All of the objects conform to the BES.xml schema, so they can be serialized and deserialized using JAXB from your existing .bes files. 
 ```java
-IEMAPI client = new IEMAPI("hostname","username","password");
+RESTAPI client = new RESTAPI("hostname","username","password");
 
 //Reading Fixlets
 Fixlet patchFixlet1 = client.getFixlet("custom","Patching",1);
@@ -101,7 +101,7 @@ SessionRelevanceQuery query = SessionRelevanceBuilder
     .addColumns("computerName","computerId")
     .build();
  
-RelevanceAPI client = new IEMAPI(
+RelevanceAPI client = new RESTAPI(
     "hostname",
     "consoleUsername",
     "consolePassword");

@@ -59,7 +59,7 @@ public class RelevanceTranslator {
 	
 	public RelevanceString buildRelevance(GroupRelevance relevance) throws Exception{
 		Function function;
-		if(relevance.getJoinByIntersection())
+		if(relevance.isJoinByIntersection())
 			function = Function.AND;
 		else
 			function = Function.OR;

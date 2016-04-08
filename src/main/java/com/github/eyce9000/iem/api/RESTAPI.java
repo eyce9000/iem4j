@@ -75,6 +75,7 @@ import com.bigfix.schemas.bes.Analysis;
 import com.bigfix.schemas.bes.BES;
 import com.bigfix.schemas.bes.BES.CustomSite;
 import com.bigfix.schemas.bes.Baseline;
+import com.bigfix.schemas.bes.ComputerGroup;
 import com.bigfix.schemas.bes.Fixlet;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.SingleAction;
@@ -91,6 +92,8 @@ import com.github.eyce9000.iem.api.actions.ActionBuilder;
 import com.github.eyce9000.iem.api.actions.ActionTargetBuilder;
 import com.github.eyce9000.iem.api.actions.logger.ActionLogger;
 import com.github.eyce9000.iem.api.actions.script.ActionScriptBuilder;
+import com.github.eyce9000.iem.api.content.ContentAPI;
+import com.github.eyce9000.iem.api.content.impl.ContentAPIImpl;
 import com.github.eyce9000.iem.api.impl.AbstractRESTAPI;
 import com.github.eyce9000.iem.api.impl.Paths;
 import com.github.eyce9000.iem.api.model.ActionID;
@@ -115,8 +118,9 @@ import com.google.common.base.Optional;
 
 
 public class RESTAPI extends AbstractRESTAPI {
-	private Unmarshaller queryUnmarshaller;
+	protected Unmarshaller queryUnmarshaller;
 	protected HttpClient apacheHttpClient;
+	protected ContentAPI content = null;
 	
 	protected RESTAPI(){}
 	
@@ -134,37 +138,14 @@ public class RESTAPI extends AbstractRESTAPI {
 				,username
 				,password);
 	}
-	public RESTAPI(URI uri, String username, String password) throws Exception{
-		SSLContext sslContext = SSLContext.getInstance("TLS");
-		sslContext.init(null, new TrustManager[] { new X509TrustManager() {
-		            @Override
-					public X509Certificate[] getAcceptedIssuers() {
-		                    return null;
-		            }
-		
-		            @Override
-					public void checkClientTrusted(X509Certificate[] certs,
-		                            String authType) {
-		            }
-		
-		            @Override
-					public void checkServerTrusted(X509Certificate[] certs,
-		                            String authType) {
-		            }
-		} }, new SecureRandom());
-		SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(sslContext,SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-		Registry<ConnectionSocketFactory> r = RegistryBuilder.<ConnectionSocketFactory>create()
-				.register(uri.getScheme(),factory)
-				.build();
-		
-		HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(r);
-		apacheHttpClient = HttpClients.custom()
-			.setConnectionManager(cm)
-			.build();
-		
+	public RESTAPI(HttpClient apacheHttpClient,URI uri, String username, String password) throws Exception{
 		client = Executor.newInstance(apacheHttpClient).auth(username, password);
 		baseURI = uri;
 		initializeJAXB();
+	}
+	public RESTAPI(URI uri, String username, String password) throws Exception{
+		this(new ApacheClientBuilder().build(),uri,username,password);
+		
 	}
 	
 	public RESTAPI(Executor client, URI uri) throws JAXBException{
@@ -178,7 +159,19 @@ public class RESTAPI extends AbstractRESTAPI {
         JAXBContext besContext = JAXBContext.newInstance(BESAPI.class,BES.class);
 		queryUnmarshaller = context.createUnmarshaller();
 		besUnmarshaller = besContext.createUnmarshaller();
+		besMarshaller = besContext.createMarshaller();
 	}
+
+	//*******************************************************************
+	// C O N T E N T   M E T H O D S
+	//*******************************************************************
+	
+	public ContentAPI content(){
+		if(content == null)
+			content =  new ContentAPIImpl(this);
+		return content;
+	}
+	
 	
 	//*******************************************************************
 	// C O M P U T E R   M E T H O D S
@@ -291,15 +284,23 @@ public class RESTAPI extends AbstractRESTAPI {
 	//*******************************************************************
 	
 	public List<BESAPI.ComputerGroup> getComputerGroups(){
-		return getContent(get(Paths.computergroups),BESAPI.ComputerGroup.class);
+		return getContent(get(Paths.computergroups+"/master"),BESAPI.ComputerGroup.class);
 	}
 	
-	public Optional<BESAPI.ComputerGroup> getComputerGroup(String siteType, String site, long groupId){
-		return getSingleContent(get(Paths.computerGroup(site, siteType)),BESAPI.ComputerGroup.class);
+	public Optional<ComputerGroup> getComputerGroup(long groupId){
+		return getSingleContent(get(Paths.computerGroup(groupId)),ComputerGroup.class);
 	}
 	
-	public List<BESAPI.Computer> getComputerGroupMembers(String siteType, String site, long groupId){
-		return getContent(get(Paths.computerGroupMembers(site, siteType)),BESAPI.Computer.class);
+	public BESAPI.ComputerGroup updateComputerGroup(long id,ComputerGroup group){
+		return getSingleContent(putBES(Paths.computerGroup(id),group),BESAPI.ComputerGroup.class).get();
+	}
+	
+	public BESAPI.ComputerGroup createComputerGroup(ComputerGroup group){
+		return getSingleContent(postBES(Paths.computergroups+"/master",group),BESAPI.ComputerGroup.class).get();
+	}
+	
+	public List<BESAPI.Computer> getComputerGroupMembers(long groupId){
+		return getContent(get(Paths.computerGroupMembers(groupId)),BESAPI.Computer.class);
 	}
 	
 	
@@ -383,14 +384,14 @@ public class RESTAPI extends AbstractRESTAPI {
 	
 	
 	// Fixlets
- 	public Optional<FixletWithActions> getFixlet(String siteType, String site, long id) throws MalformedURLException{
+ 	public Optional<FixletWithActions> getFixlet(String siteType, String site, long id){
 		return getSingleContent(get(Paths.fixlet(site,siteType,id)),FixletWithActions.class);
 	}
-	public Optional<BESAPI.Fixlet> createFixlet(String siteType, String site, FixletWithActions content) throws MalformedURLException{
-		return getSingleContent(putBES(Paths.fixlets(site, siteType),content),BESAPI.Fixlet.class);
+	public Optional<BESAPI.Fixlet> createFixlet(String siteType, String site, FixletWithActions content){
+		return getSingleContent(postBES(Paths.fixlets(site, siteType),content),BESAPI.Fixlet.class);
 	}
 	
-	public void updateFixlet(String siteType, String site, long id, FixletWithActions content) throws MalformedURLException{
+	public void updateFixlet(String siteType, String site, long id, FixletWithActions content){
 		putBES(Paths.fixlet(site,siteType,id),content);
 	}
 	
@@ -404,35 +405,35 @@ public class RESTAPI extends AbstractRESTAPI {
 
 	
 	// Tasks
- 	public Optional<Task> getTask(String siteType, String site, long id) throws MalformedURLException{
+ 	public Optional<Task> getTask(String siteType, String site, long id){
 		return getSingleContent(get(Paths.task(site,siteType,id)),Task.class);
 	}
-	public Optional<BESAPI.Task> createtask(String siteType, String site, Task content) throws MalformedURLException{
-		return getSingleContent(putBES(Paths.tasks(site, siteType),content),BESAPI.Task.class);
+	public Optional<BESAPI.Task> createTask(String siteType, String site, Task content){
+		return getSingleContent(postBES(Paths.tasks(site, siteType),content),BESAPI.Task.class);
 	}
 	
-	public void updatetask(String siteType, String site, long id, Task content) throws MalformedURLException{
+	public void updateTask(String siteType, String site, long id, Task content){
 		putBES(Paths.task(site,siteType,id),content);
 	}
 	
-	public List<BESAPI.Task> gettasks(String siteType,String site){
+	public List<BESAPI.Task> getTasks(String siteType,String site){
 		return getContent(get(Paths.tasks(site, siteType)),BESAPI.Task.class);
 	}
 	
-	public void deletetask(String siteType, String site, long id){
+	public void deleteTask(String siteType, String site, long id){
 		delete(Paths.task(site,siteType,id));
 	}
 		
 	
 	//Analyses
-	public Optional<Analysis> getAnalysis(String siteType, String site, long id) throws MalformedURLException{
+	public Optional<Analysis> getAnalysis(String siteType, String site, long id){
 		return getSingleContent(get(Paths.analysis(site,siteType,id)),Analysis.class);
 	}
-	public Optional<BESAPI.Analysis> createAnalysis(String siteType, String site, Analysis content) throws MalformedURLException{
-		return getSingleContent(putBES(Paths.analyses(site, siteType),content),BESAPI.Analysis.class);
+	public Optional<BESAPI.Analysis> createAnalysis(String siteType, String site, Analysis content){
+		return getSingleContent(postBES(Paths.analyses(site, siteType),content),BESAPI.Analysis.class);
 	}
 	
-	public void updateAnalysis(String siteType, String site, long id, Analysis content) throws MalformedURLException{
+	public void updateAnalysis(String siteType, String site, long id, Analysis content){
 		putBES(Paths.analysis(site,siteType,id),content);
 	}
 	
@@ -445,14 +446,14 @@ public class RESTAPI extends AbstractRESTAPI {
 	}
 	
 	//Baselines
-	public Optional<Baseline> getBaseline(String siteType, String site, long id) throws MalformedURLException{
+	public Optional<Baseline> getBaseline(String siteType, String site, long id){
 		return getSingleContent(get(Paths.fixlet(site,siteType,id)),Baseline.class);
 	}
-	public Optional<BESAPI.Baseline> createBaseline(String siteType, String site, Baseline content) throws MalformedURLException{
-		return getSingleContent(putBES(Paths.siteImport(site, siteType),content),BESAPI.Baseline.class);
+	public Optional<BESAPI.Baseline> createBaseline(String siteType, String site, Baseline content){
+		return getSingleContent(postBES(Paths.siteImport(site, siteType),content),BESAPI.Baseline.class);
 	}
 	
-	public void updateBaseline(String siteType, String site, long id, Baseline content) throws MalformedURLException{
+	public void updateBaseline(String siteType, String site, long id, Baseline content){
 		putBES(Paths.fixlet(site,siteType,id),content);
 	}
 	

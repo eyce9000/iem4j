@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Executor;
 
 @Deprecated
@@ -17,6 +18,12 @@ public class IEMAPI extends RESTAPI {
 
 	public IEMAPI(Executor client, URI uri) throws JAXBException {
 		super(client, uri);
+		// TODO Auto-generated constructor stub
+	}
+
+	public IEMAPI(HttpClient apacheHttpClient, URI uri, String username, String password)
+			throws Exception {
+		super(apacheHttpClient, uri, username, password);
 		// TODO Auto-generated constructor stub
 	}
 

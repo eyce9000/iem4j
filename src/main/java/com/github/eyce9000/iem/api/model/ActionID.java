@@ -1,8 +1,10 @@
 package com.github.eyce9000.iem.api.model;
 
+import java.math.BigInteger;
+
 public class ActionID {
 	private String name;
-	private String id;
+	private BigInteger id;
 	private State state;
 	public String getName() {
 		return name;
@@ -10,10 +12,10 @@ public class ActionID {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public String getId() {
+	public BigInteger getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(BigInteger id) {
 		this.id = id;
 	}
 	
@@ -25,4 +27,18 @@ public class ActionID {
 	}
 
 	public static enum State{Open,Stopped,Expired};
+	
+	@Override
+	public String toString(){
+		return String.format("(%d)\"%s\"[%s]",id,name,state.name());
+	}
+	@Override
+	public ActionID clone(){
+		ActionID copy = new ActionID();
+		copy.id = new BigInteger(id.toByteArray());
+		copy.name = name;
+		copy.state = state;
+		
+		return copy;
+	}
 }

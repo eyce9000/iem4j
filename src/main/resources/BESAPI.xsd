@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<xs:schema id="BESAPI" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="qualified" elementFormDefault="qualified" version="9.2.0.363">
+<xs:schema id="BESAPI" attributeFormDefault="qualified" elementFormDefault="qualified" version="9.2.0.363" xmlns:xs="http://www.w3.org/2001/XMLSchema" >
 
 	<xs:element name="BESAPI">
 		<xs:complexType>
