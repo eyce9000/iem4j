@@ -31,7 +31,7 @@ Then add this dependency:
 <dependency>
   <groupId>com.github.eyce9000</groupId>
   <artifactId>iem4j-client</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
 </dependency>
 ```
 
@@ -90,7 +90,7 @@ for(ComputerResultType computerResult:actionResults.getComputer()){
 
 ```
  
-###Relevance Queries###
+### Relevance Queries ###
 
 Relevance queries can be run using both the REST API and Webreports API. Both clients accept SessionRelevanceQuery objects, which wrap a normal session relevance query and provide support for named columns.
 
@@ -135,4 +135,26 @@ SessionRelevanceQuery query = SessionRelevanceBuilder
     .build();
 
 List<MyComputer> computers = relevanceClient.executeQuery(query,MyComputer.class);
+```
+ 
+### Rebuilding Baselines ###
+
+This library includes code for re-building baselines when they become out-of-sync with their source fixlets. 
+
+The code attempts to build the baseline so that it exactly matches what Bigfix is looking for when checking for out-of-sync baselines, but in some cases it may not match exactly character for character. This will be true with new releases of Bigfix where the formatting of generated relevance changes slightly.
+
+```java
+RESTAPI client = new RESTAPI("hostname","username","password");
+
+//Create synchronizer object
+BaselineSynchronizer sync = new BaselineSynchronizer(client);
+
+//Get your baseline
+Baseline baseline = client.getBaseline("custom","My Site",123456);
+//Rebuild the components of the baseline from their source fixlets
+sync.rebuildBaselineComponents(baseline);
+
+//Re-upload your baseline
+client.updateBaseline("custom","My Site", 123456,baseline);
+
 ```

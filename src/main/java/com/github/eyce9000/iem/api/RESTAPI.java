@@ -341,7 +341,7 @@ public class RESTAPI extends AbstractRESTAPI {
 		deleteAction(action.getID().longValue());
 	}
 	public void deleteAction(long actionId){
-		post(Paths.action(actionId));
+		delete(Paths.action(actionId));
 				
 	}
 	public List<BESAPI.Action> getActions(){
