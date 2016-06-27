@@ -1,7 +1,7 @@
 #IEM4J - Java Library for Bigfix / IBM Endpoint Manager (IEM) APIs#
 
 ##About the Library##
-This library is a wrapper of the Bigfix (IBM Endpoint Manager / IEM) REST API and Webreports API. This library does not cover the functionality of the REST API 100%, but is mostly focused on content (fixlet) manipulation. 
+This library is a wrapper of the Bigfix (IBM Endpoint Manager / IEM) REST API and Webreports API. This library does not cover the functionality of the REST API 100%, but is mostly focused on content (fixlet) manipulation.
 
 IEM4J uses the Bigfix RESTAPI schema version 9.2 and higher.
 
@@ -17,8 +17,8 @@ In order to use this library as a maven dependency you will need to add the foll
 ```xml
 <repositories>
   <repository>
-    <id>eyce9000-mvn-repo</id>
-    <url>https://raw.github.com/eyce9000/mvn-repo/head/</url>
+    <id>jcenter</id>
+    <url>https://jcenter.bintray.com/</url>
     <snapshots>
       <enabled>true</enabled>
       <updatePolicy>always</updatePolicy>
@@ -31,14 +31,14 @@ Then add this dependency:
 <dependency>
   <groupId>com.github.eyce9000</groupId>
   <artifactId>iem4j-client</artifactId>
-  <version>2.0.1</version>
+  <version>2.0.1.1</version>
 </dependency>
 ```
 
 ##Using the Library##
 
 ###Reading, Creating and Uploading Fixlets###
-You can upload and download ActionFixlets, Tasks, Analyses and Baselines. All of the objects conform to the BES.xml schema, so they can be serialized and deserialized using JAXB from your existing .bes files. 
+You can upload and download ActionFixlets, Tasks, Analyses and Baselines. All of the objects conform to the BES.xml schema, so they can be serialized and deserialized using JAXB from your existing .bes files.
 ```java
 RESTAPI client = new RESTAPI("hostname","username","password");
 
@@ -55,8 +55,8 @@ client.createFixlet("custom","Patching",myContent);
 
 //Uploading an entire .bes file
 client.importContent("custom","All-Patching",bes);
-  
-``` 
+
+```
 
 ###Creating and Running Actions###
 Some tools are provided to make building actions easier. The following is an example of building a SingleAction (as opposed to a SourcedFixletAction) and its actionscript using the appropriate builder tools.
@@ -89,7 +89,7 @@ for(ComputerResultType computerResult:actionResults.getComputer()){
 }
 
 ```
- 
+
 ### Relevance Queries ###
 
 Relevance queries can be run using both the REST API and Webreports API. Both clients accept SessionRelevanceQuery objects, which wrap a normal session relevance query and provide support for named columns.
@@ -100,7 +100,7 @@ SessionRelevanceQuery query = SessionRelevanceBuilder
     .fromRelevance("(name of it, id of it) of bes computers")
     .addColumns("computerName","computerId")
     .build();
- 
+
 RelevanceAPI client = new RESTAPI(
     "hostname",
     "consoleUsername",
@@ -112,9 +112,9 @@ RelevanceAPI relevanceClient = new WebreportsAPI(
    "hostname",
    "webreportsUsername",
    "webreportsPassword");
-   
+
 List<Map<String,Object>> webreportsResults = relevanceClient.executeQuery(query);
-``` 
+```
 
 You can also read relevance results into Pojos using JAXB or Jackson. For example the following Pojo with Jackson annotations:
 ```java
@@ -136,10 +136,10 @@ SessionRelevanceQuery query = SessionRelevanceBuilder
 
 List<MyComputer> computers = relevanceClient.executeQuery(query,MyComputer.class);
 ```
- 
+
 ### Rebuilding Baselines ###
 
-This library includes code for re-building baselines when they become out-of-sync with their source fixlets. 
+This library includes code for re-building baselines when they become out-of-sync with their source fixlets.
 
 The code attempts to build the baseline so that it exactly matches what Bigfix is looking for when checking for out-of-sync baselines, but in some cases it may not match exactly character for character. This will be true with new releases of Bigfix where the formatting of generated relevance changes slightly.
 

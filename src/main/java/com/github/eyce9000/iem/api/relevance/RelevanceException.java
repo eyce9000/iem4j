@@ -14,4 +14,7 @@ public class RelevanceException extends Exception {
 	public RelevanceException(String faultString) {
 		super(faultString);
 	}
+	public RelevanceException(String faultString,Exception source) {
+		super(faultString,source);
+	}
 }

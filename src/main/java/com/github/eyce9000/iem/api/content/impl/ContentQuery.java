@@ -98,9 +98,9 @@ public class ContentQuery {
 		if(site==null)
 			return queryFixlets(relevance,parameters);
 		
-		String siteRelevance = "name of it = '"+site+"'";
+		String siteRelevance = "name of it = \""+site+"\"";
 		String siteQuery = " all bes sites whose ( "+siteRelevance+" )";
-		String fullRelevance = FIXLET_PROPERTIES+" whose ( "+relevance+" ) of fixlets of "+siteQuery;
+		String fullRelevance = FIXLET_PROPERTIES+" fixlets whose ( "+relevance+" ) of "+siteQuery;
 		SessionRelevanceQuery srq = SessionRelevanceBuilder
 				.fromRelevance(fullRelevance)
 				.addColumns(FIXLET_COLUMNS).build();

@@ -553,9 +553,9 @@ public class RESTAPI extends AbstractRESTAPI {
 	
 	@Override
 	public void executeQueryWithHandler(SessionRelevanceQuery srq, RawResultHandler handler) throws RelevanceException, HandlerException{
-		
+		String cleanedQuery = srq.constructQuery();
 		try {
-			String data = "relevance="+URLEncoder.encode(srq.constructQuery(), "UTF-8");
+			String data = "relevance="+URLEncoder.encode(cleanedQuery, "UTF-8");
 			HttpResponse response = request(Action.Post,Paths.query,data);
 			
 			if(response.getStatusLine().getStatusCode()>=200 && response.getStatusLine().getStatusCode()<300){
@@ -577,6 +577,8 @@ public class RESTAPI extends AbstractRESTAPI {
 			}
 		} 
 		catch (RelevanceException e){
+			if(e.getMessage().contains("could not be parsed"))
+				throw new RelevanceException(cleanedQuery,e);
 			throw e;
 		}
 		catch (HandlerException e){
