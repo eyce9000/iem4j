@@ -1,5 +1,6 @@
 package com.github.eyce9000.iem.api.serialization;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -27,7 +28,7 @@ public class ResultAnswerAdapter extends XmlAdapter<ResultAnswerAdapter.Answer,O
 		Object typed = null;
 		switch(rawValue.type){
 		case INTEGER:
-			typed = Integer.parseInt(rawValue.value);
+			typed = Long.parseLong(rawValue.value);
 			break;
 		case TIME:
 			typed = dateFormatter.parseDateTime(rawValue.value).toDate();

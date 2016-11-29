@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<BESAPI xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BESAPI.xsd">
-	<Query Resource="nameses of bes computers whose (name of it as lowercase contains &quot;bigfix&quot;)">
-		<Result></Result>
-		<Error>The operator "nameses" is not defined.</Error>
-	</Query>
-</BESAPI>

@@ -1,126 +1,80 @@
 package com.github.eyce9000.iem.api;
 
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLEncoder;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.joda.time.DateTime;
 
 import com.bigfix.schemas.bes.AbstractAction;
-import com.bigfix.schemas.bes.Action;
 import com.bigfix.schemas.bes.Analysis;
 import com.bigfix.schemas.bes.BES;
 import com.bigfix.schemas.bes.BES.CustomSite;
 import com.bigfix.schemas.bes.Baseline;
 import com.bigfix.schemas.bes.ComputerGroup;
-import com.bigfix.schemas.bes.Fixlet;
 import com.bigfix.schemas.bes.FixletWithActions;
 import com.bigfix.schemas.bes.SingleAction;
 import com.bigfix.schemas.bes.Site;
 import com.bigfix.schemas.bes.SourcedFixletAction;
 import com.bigfix.schemas.bes.Task;
 import com.bigfix.schemas.besapi.BESAPI;
-import com.bigfix.schemas.besapi.BESAPI.Query;
 import com.bigfix.schemas.besapi.BESAPI.SiteFile;
 import com.bigfix.schemas.besapi.ComputerSetting;
-import com.bigfix.schemas.besapi.RelevanceAnswer;
-import com.bigfix.schemas.besapi.RelevanceResult;
 import com.github.eyce9000.iem.api.actions.ActionBuilder;
 import com.github.eyce9000.iem.api.actions.ActionTargetBuilder;
-import com.github.eyce9000.iem.api.actions.logger.ActionLogger;
 import com.github.eyce9000.iem.api.actions.script.ActionScriptBuilder;
 import com.github.eyce9000.iem.api.content.ContentAPI;
 import com.github.eyce9000.iem.api.content.impl.ContentAPIImpl;
 import com.github.eyce9000.iem.api.impl.AbstractRESTAPI;
 import com.github.eyce9000.iem.api.impl.Paths;
-import com.github.eyce9000.iem.api.model.ActionID;
-import com.github.eyce9000.iem.api.model.FixletID;
-import com.github.eyce9000.iem.api.model.SiteID;
-import com.github.eyce9000.iem.api.model.FixletID.ResourceType;
-import com.github.eyce9000.iem.api.relevance.DataType;
-import com.github.eyce9000.iem.api.relevance.QueryResultColumn;
 import com.github.eyce9000.iem.api.relevance.RESTResultParser;
 import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.RowSerializer;
-import com.github.eyce9000.iem.api.relevance.SessionRelevanceBuilder;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
 import com.github.eyce9000.iem.api.relevance.handlers.HandlerException;
 import com.github.eyce9000.iem.api.relevance.handlers.RawResultHandler;
 import com.github.eyce9000.iem.api.relevance.handlers.impl.RawResultHandlerDefault;
 import com.github.eyce9000.iem.api.relevance.handlers.impl.TypedResultListHandler;
 import com.github.eyce9000.iem.api.relevance.results.QueryResult;
-import com.github.eyce9000.iem.api.relevance.results.ResultTuple;
-import com.github.eyce9000.iem.api.serialization.ResultAnswerAdapter.Answer;
+import com.github.eyce9000.iem.api.tools.Utils;
 import com.google.common.base.Optional;
 
 
+
 public class RESTAPI extends AbstractRESTAPI {
+	public static final String BESAPI_VERSION_926 = "9.2.6";
+	public static final String BESAPI_VERSION_927 = "9.2.7";
+	public static final String BESAPI_VERSION_CURRENT = System.getProperty("bigfix.api.version", BESAPI_VERSION_927);
+	
 	protected Unmarshaller queryUnmarshaller;
 	protected HttpClient apacheHttpClient;
 	protected ContentAPI content = null;
+	protected String apiVersion = BESAPI_VERSION_CURRENT;
+
 	
 	protected RESTAPI(){}
 	
@@ -454,6 +408,8 @@ public class RESTAPI extends AbstractRESTAPI {
 	}
 	
 	public void updateBaseline(String siteType, String site, long id, Baseline content){
+		if(Utils.versionCompare(apiVersion,BESAPI_VERSION_926)>0)
+			throw new RuntimeException("Due to BESAPI bug in 9.2.6 and above, unable to update baselines without corrupting them. Delete and recreate to update.");
 		putBES(Paths.fixlet(site,siteType,id),content);
 	}
 	

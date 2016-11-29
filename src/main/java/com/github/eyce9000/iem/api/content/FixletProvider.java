@@ -10,15 +10,15 @@ public interface FixletProvider {
 	SingleFixletHolder<Baseline> baseline(String name) throws RelevanceException;
 
 	MultiFixletHolder<Baseline> baselines(String name) throws RelevanceException;
-
+	
 	SingleFixletHolder<Task> task(String name) throws RelevanceException;
 
 	MultiFixletHolder<Task> tasks(String name) throws RelevanceException;
-
+	
 	SingleFixletHolder<Analysis> analysis(String name) throws RelevanceException;
 
 	MultiFixletHolder<Analysis> analyses(String name) throws RelevanceException;
-
+	
 	SingleFixletHolder<Fixlet> fixlet(String name) throws RelevanceException;
 
 	MultiFixletHolder<Fixlet> fixlets(String name) throws RelevanceException;

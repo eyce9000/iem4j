@@ -1,4 +1,4 @@
-package com.github.eyce9000.iem.webreports;
+package com.github.eyce9000.iem.api.relevance;
 
 import static org.junit.Assert.*;
 
@@ -17,9 +17,8 @@ import com.github.eyce9000.iem.api.relevance.RelevanceException;
 import com.github.eyce9000.iem.api.relevance.SessionRelevanceQuery;
 import com.github.eyce9000.iem.api.relevance.handlers.HandlerException;
 import com.github.eyce9000.iem.api.relevance.handlers.RawResultHandler;
-import com.github.eyce9000.iem.webreports.relevance.ResultParser;
 
-public class ResultParserTest {
+public class RESTResultParserTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -53,23 +52,27 @@ public class ResultParserTest {
 			}
 
 		};
-		new ResultParser().parse(new SessionRelevanceQuery(),
-			ResultParserTest.class.getResourceAsStream("relevance2.xml"), handler);
-		new ResultParser().parse(new SessionRelevanceQuery(),
-			ResultParserTest.class.getResourceAsStream("relevance1.xml"), handler);
+		new RESTResultParser().parse(new SessionRelevanceQuery(),
+			RESTResultParserTest.class.getResourceAsStream("relevance1.xml"), handler);
+		new RESTResultParser().parse(new SessionRelevanceQuery(),
+			RESTResultParserTest.class.getResourceAsStream("relevance2.xml"), handler);
 		RelevanceException relevanceException = null;
+		
+
+		relevanceException = null;
 		try {
-			new ResultParser().parse(new SessionRelevanceQuery(),
-				ResultParserTest.class.getResourceAsStream("relevance3.xml"), handler);
+			new RESTResultParser().parse(new SessionRelevanceQuery(),
+				RESTResultParserTest.class.getResourceAsStream("relevance-fail.xml"), handler);
 		} catch (RelevanceException e) {
 			relevanceException = e;
 		}
 		assertNotNull(relevanceException);
+		
 
 		relevanceException = null;
 		try {
-			new ResultParser().parse(new SessionRelevanceQuery(),
-				ResultParserTest.class.getResourceAsStream("relevance4.xml"), handler);
+			new RESTResultParser().parse(new SessionRelevanceQuery(),
+				RESTResultParserTest.class.getResourceAsStream("relevance4.xml"), handler);
 		} catch (RelevanceException e) {
 			relevanceException = e;
 		}
